@@ -1,0 +1,153 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Edit User - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="bi bi-person-gear text-gradient me-2"></i>Edit User Role
+                    </h1>
+                    <p class="text-muted mb-0">Modify permissions for {{ target_user.username }}</p>
+                </div>
+                <a href="{% url 'admin_dash:users' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Users
+                </a>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-1">User Information</h6>
+                                    <p class="mb-1"><strong>Username:</strong> {{ target_user.username }}</p>
+                                    <p class="mb-1"><strong>Email:</strong> {{ target_user.email }}</p>
+                                    <p class="mb-0"><strong>Name:</strong> {{ target_user.get_full_name|default:"Not set" }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-1">Current Status</h6>
+                                    <p class="mb-1">
+                                        <strong>Account Status:</strong> 
+                                        {% if target_user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>Current Role:</strong> 
+                                        {% if target_user.is_superuser %}
+                                            <span class="badge bg-warning">Super Admin</span>
+                                        {% elif target_user.is_staff %}
+                                            <span class="badge bg-info">Admin</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">Regular User</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="mb-0"><strong>Joined:</strong> {{ target_user.date_joined|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="role" class="form-label">
+                                <i class="bi bi-shield-check me-1"></i>User Role
+                            </label>
+                            <select name="role" id="role" class="form-select" required>
+                                <option value="">Select a role</option>
+                                <option value="regular" {% if not target_user.is_staff and not target_user.is_superuser %}selected{% endif %}>Regular User (Surveyer)</option>
+                                <option value="admin" {% if target_user.is_staff and not target_user.is_superuser %}selected{% endif %}>Admin (Staff)</option>
+                                <option value="super_admin" {% if target_user.is_superuser %}selected{% endif %}>Super Admin</option>
+                            </select>
+                            <small class="text-muted">Choose the appropriate role for this user</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-toggle-on me-1"></i>Account Status
+                            </label>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="is_active" id="is_active" 
+                                       class="form-check-input" {% if target_user.is_active %}checked{% endif %}>
+                                <label for="is_active" class="form-check-label">
+                                    Account is active (user can login)
+                                </label>
+                            </div>
+                            <small class="text-muted">Uncheck to temporarily disable account</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% if target_user == request.user %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Self-protection:</strong> You cannot remove your own super admin status or deactivate your own account.
+                </div>
+                {% endif %}
+
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-info-circle me-2"></i>Role Changes Impact
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Regular User:</strong>
+                            <ul class="mb-0 small">
+                                <li>Loses admin dashboard access</li>
+                                <li>Can only edit own surveys</li>
+                                <li>Cannot view all results</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Admin:</strong>
+                            <ul class="mb-0 small">
+                                <li>Gains admin dashboard access</li>
+                                <li>Can edit any survey</li>
+                                <li>Can view all results</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Super Admin:</strong>
+                            <ul class="mb-0 small">
+                                <li>Full system access</li>
+                                <li>Can manage users</li>
+                                <li>Cannot be removed by others</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between gap-2">
+                    <div>
+                        <a href="{% url 'admin_dash:delete_user' target_user.id %}" class="btn btn-outline-danger">
+                            <i class="bi bi-trash me-1"></i>Delete User
+                        </a>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Update User
+                        </button>
+                        <a href="{% url 'admin_dash:users' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

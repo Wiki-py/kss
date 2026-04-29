@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Clan Data Report</title>
+</head>
+<body>
+    <div class="header">
+        <h1>Bwamba Kingdom Baseline Survey System</h1>
+        <h2>Clan Data Report</h2>
+        <p>Generated on: {{ generated_date|date:"F d, Y H:i" }}</p>
+        <p>Total Clans: {{ total_clans }}</p>
+    </div>
+
+    {% for clan_info in clans_data %}
+    <div class="clan-section">
+        <div class="clan-title">{{ clan_info.clan.name }}</div>
+        
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Basic Information</th>
+            </tr>
+            <tr>
+                <td width="30%">Clan Name:</td>
+                <td>{{ clan_info.clan.name }}</td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td>{{ clan_info.clan.description|default:"No description provided" }}</td>
+            </tr>
+            <tr>
+                <td>Status:</td>
+                <td>{% if clan_info.clan.is_active %}Active{% else %}Inactive{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Created By:</td>
+                <td>{{ clan_info.clan.created_by.username }}</td>
+            </tr>
+            <tr>
+                <td>Created Date:</td>
+                <td>{{ clan_info.clan.created_at|date:"F d, Y" }}</td>
+            </tr>
+        </table>
+
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Location Information</th>
+            </tr>
+            <tr>
+                <td width="30%">Village:</td>
+                <td>{{ clan_info.clan.village|default:"Not specified" }}</td>
+            </tr>
+            <tr>
+                <td>Parish:</td>
+                <td>{{ clan_info.clan.parish|default:"Not specified" }}</td>
+            </tr>
+            <tr>
+                <td>Sub-County:</td>
+                <td>{{ clan_info.clan.sub_county|default:"Not specified" }}</td>
+            </tr>
+            <tr>
+                <td>District:</td>
+                <td>{{ clan_info.clan.district|default:"Not specified" }}</td>
+            </tr>
+        </table>
+
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Leadership Information</th>
+            </tr>
+            <tr>
+                <td width="30%">Clan Head:</td>
+                <td>{{ clan_info.clan.clan_head_name|default:"Not specified" }}</td>
+            </tr>
+            <tr>
+                <td>Contact:</td>
+                <td>{{ clan_info.clan.clan_head_contact|default:"Not specified" }}</td>
+            </tr>
+            <tr>
+                <td>Email:</td>
+                <td>{{ clan_info.clan.clan_head_email|default:"Not specified" }}</td>
+            </tr>
+        </table>
+
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Hierarchy Statistics</th>
+            </tr>
+            <tr>
+                <td width="30%">Sub-Clans:</td>
+                <td>{{ clan_info.sub_clans_count }}</td>
+            </tr>
+            <tr>
+                <td>Ridges:</td>
+                <td>{{ clan_info.ridges_count }}</td>
+            </tr>
+            <tr>
+                <td>Data Collections:</td>
+                <td>{{ clan_info.response_count }}</td>
+            </tr>
+        </table>
+
+        {% if clan_info.survey_responses %}
+        <h4>Survey Responses ({{ clan_info.response_count }})</h4>
+        {% for response in clan_info.survey_responses %}
+        <div class="response-item">
+            <strong>{{ response.user.username }}</strong>
+            {% if response.respondent_email %}({{ response.respondent_email }}){% endif %}
+            - {{ response.submitted_at|date:"F d, Y H:i" }}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="footer">
+        <p>End of Report - Bwamba Kingdom Baseline Survey System</p>
+    </div>
+</body>
+</html>

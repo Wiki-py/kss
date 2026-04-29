@@ -1,0 +1,270 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Manage Users - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Manage Users</h1>
+    <p>User management and permissions</p>
+</div>
+
+<div class="admin-actions">
+    <a href="{% url 'admin_dash:create_user' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus me-1"></i>Create New User
+    </a>
+    <a href="{% url 'admin_dash:super_admin_dashboard' %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="filters-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <input type="text" name="search" placeholder="Search users..." value="{{ search }}" class="form-control">
+        </div>
+        <div class="filter-group">
+            <select name="role" class="form-control">
+                <option value="">All Roles</option>
+                <option value="regular" {% if role == 'regular' %}selected{% endif %}>Regular Users</option>
+                <option value="admin" {% if role == 'admin' %}selected{% endif %}>Admin Users</option>
+                <option value="super_admin" {% if role == 'super_admin' %}selected{% endif %}>Super Admins</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="?" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<div class="users-table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Last Login</th>
+                <th>Date Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in page_obj %}
+                <tr>
+                    <td>
+                        <strong>{{ user.username }}</strong>
+                        {% if user.is_superuser %}
+                            <br><span class="role-badge super-admin">Super Admin</span>
+                        {% elif user.is_staff %}
+                            <br><span class="role-badge admin">Admin</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.email|default:"-" }}</td>
+                    <td>{{ user.get_full_name|default:"-" }}</td>
+                    <td>
+                        {% if user.is_superuser %}
+                            <span class="role-badge super-admin">Super Admin</span>
+                        {% elif user.is_staff %}
+                            <span class="role-badge admin">Admin</span>
+                        {% else %}
+                            <span class="role-badge regular">Regular</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.last_login %}
+                            {{ user.last_login|date:"M d, Y g:i A" }}
+                        {% else %}
+                            <em>Never</em>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'admin_dash:edit_user' user.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="{% url 'admin_dash:reset_password' user.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-key"></i> Reset
+                            </a>
+                            {% if user.id != request.user.id %}
+                                <a href="{% url 'admin_dash:delete_user' user.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="empty-state">
+                            <h3>No users found</h3>
+                            <p>No users match the current filters.</p>
+                            <a href="{% url 'admin_dash:create_user' %}" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>Create User
+</a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">&laquo; First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">Previous</a>
+    {% endif %}
+    
+    <span class="current">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}">Last &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.users-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table th {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.admin-table tr:hover {
+    background: #f7fafc;
+}
+
+.role-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.regular {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.admin {
+    background: #bee3f8;
+    color: #2c5282;
+}
+
+.super-admin {
+    background: #d6bcfa;
+    color: #553c9a;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-danger {
+    background: #e53e3e;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c53030;
+}
+
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    color: #718096;
+}
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .admin-table {
+        font-size: 0.875rem;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

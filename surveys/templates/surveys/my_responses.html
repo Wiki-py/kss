@@ -1,0 +1,139 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}My Responses - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>My Data Collections</h1>
+    <p>View and manage the baseline data you have collected for clans in the Bwamba Kingdom.</p>
+</div>
+
+{% if responses %}
+    <div class="responses-list">
+        {% for response in responses %}
+            <div class="card response-item">
+                <div class="response-header">
+                    <h3>{{ response.survey.title }}</h3>
+                    <div class="response-meta">
+                        <span class="date">Collected: {{ response.submitted_at|date:"M d, Y g:i A" }}</span>
+                        {% if response.survey.is_clan %}
+                            <span class="badge bg-warning">Clan Data</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="response-preview">
+                    {% if response.response_text %}
+                        <p><strong>Response Data:</strong> {{ response.response_text|truncatewords:15 }}</p>
+                    {% elif response.answers.first %}
+                        <p><strong>Sample Answer:</strong> {{ response.answers.first.answer_text|truncatewords:15 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="response-actions">
+                    <a href="{% url 'surveys:survey_detail' response.survey.id %}" class="btn btn-secondary">
+                        View Survey
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'surveys:survey_results' response.survey.id %}" class="btn btn-secondary">
+                            View Results
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+            
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <h2>No Responses Yet</h2>
+        <p>You haven't completed any surveys yet.</p>
+        <p>Start by <a href="{% url 'surveys:survey_list' %}">browsing available surveys</a> and sharing your feedback!</p>
+    </div>
+{% endif %}
+
+<style>
+.responses-list {
+    margin-top: 2rem;
+}
+
+.response-item {
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #667eea;
+}
+
+.response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.response-header h3 {
+    margin: 0;
+    color: #2d3748;
+}
+
+.response-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: right;
+}
+
+.date, .answers-count {
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.response-preview {
+    background: #f7fafc;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+    color: #4a5568;
+}
+
+.response-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .response-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .response-meta {
+        text-align: left;
+    }
+    
+    .response-actions {
+        flex-direction: column;
+    }
+    
+    .response-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

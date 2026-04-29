@@ -1,0 +1,235 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Manage Surveys - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Manage Surveys</h1>
+    <p>Create, edit, and manage surveys</p>
+</div>
+
+<div class="admin-actions">
+    <a href="/admin/surveys/survey/add/" class="btn btn-primary">Create New Survey</a>
+    <a href="{% url 'admin_dash:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<div class="filters-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <input type="text" name="search" placeholder="Search surveys..." value="{{ search }}" class="form-control">
+        </div>
+        <div class="filter-group">
+            <select name="status" class="form-control">
+                <option value="">All Status</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="?" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<div class="surveys-table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Questions</th>
+                <th>Responses</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for survey in page_obj %}
+                <tr>
+                    <td>
+                        <strong>{{ survey.title }}</strong>
+                        {% if survey.description %}
+                            <br><small class="text-muted">{{ survey.description|truncatewords:15 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if survey.is_active %}
+                            <span class="status-badge status-active">Active</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ survey.questions.count }}</td>
+                    <td>
+                        <a href="{% url 'admin_dash:responses' %}?survey={{ survey.id }}">{{ survey.responses.count }}</a>
+                    </td>
+                    <td>{{ survey.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'surveys:survey_detail' survey.id %}" class="btn btn-sm btn-secondary">View</a>
+                            <a href="{% url 'surveys:survey_results' survey.id %}" class="btn btn-sm btn-secondary">Results</a>
+                            <a href="/admin/surveys/survey/{{ survey.id }}/change/" class="btn btn-sm btn-primary">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="empty-state">
+                            <h3>No surveys found</h3>
+                            <p>Get started by creating your first survey.</p>
+                            <a href="/admin/surveys/survey/add/" class="btn btn-primary">Create Survey</a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">&laquo; First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+    {% endif %}
+    
+    <span class="current">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Last &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.surveys-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table th {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.admin-table tr:hover {
+    background: #f7fafc;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.status-inactive {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    color: #718096;
+}
+
+.text-muted {
+    color: #718096;
+}
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .admin-table {
+        font-size: 0.875rem;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

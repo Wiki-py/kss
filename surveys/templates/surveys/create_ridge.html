@@ -1,0 +1,108 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Create Ridge - OBB Baseline Survey System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'surveys/css/concurrent_access.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'surveys/js/concurrent_access.js' %}"></script>
+<script>
+// Configuration for concurrent access
+window.concurrentConfig = {
+    lockType: 'ridge_create',
+    objectId: parseInt('{{ sub_clan.id|default:0 }}'),
+    sessionType: 'ridge_create',
+    refreshInterval: 30000
+};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-diagram-3-fill me-2"></i>
+                        Create New Ridge (Bitubhi)
+                        {% if sub_clan %}
+                            <small class="text-white-50">for {{ sub_clan.name }}</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if sub_clan %}
+                            <input type="hidden" name="sub_clan_id" value="{{ sub_clan.id }}">
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Ridge Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required
+                                   placeholder="Enter the name of the ridge (Bitubhi)">
+                            <div class="form-text">This should be the local name of the ridge within the sub-clan.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="leader_name" class="form-label">Ridge Leader Name *</label>
+                            <input type="text" class="form-control" id="leader_name" name="leader_name" required
+                                   placeholder="Enter the name of the ridge leader">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="leader_contact" class="form-label">Ridge Leader Contact</label>
+                            <input type="text" class="form-control" id="leader_contact" name="leader_contact"
+                                   placeholder="Enter phone number or contact information">
+                            <div class="form-text">Optional: Provide contact information for the ridge leader.</div>
+                        </div>
+
+                        {% if sub_clan %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            This ridge will be created under the <strong>{{ sub_clan.name }}</strong> sub-clan.
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'surveys:survey_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Surveys
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Create Ridge
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Users Panel -->
+<div id="active-users" class="active-users-panel" style="display: none;">
+    <div class="active-users-header">
+        <span class="active-users-count">0 users active</span>
+    </div>
+    <div class="active-users-list">
+        <!-- Active users will be populated here -->
+    </div>
+</div>
+
+<!-- Collaboration Notifications Container -->
+<div id="collaboration-notifications"></div>
+
+{% endblock %}

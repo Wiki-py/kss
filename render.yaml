@@ -1,0 +1,13 @@
+services:
+  # Web Service
+  - type: web
+    name: web
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn surveysystem.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: "surveysystem.settings"
+      - key: PYTHON_VERSION
+        value: "3.14.0"

@@ -4,10 +4,16 @@ services:
     name: web
     env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
     startCommand: "gunicorn surveysystem.wsgi:application"
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: "surveysystem.settings"
       - key: PYTHON_VERSION
         value: "3.14.0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*.onrender.com"

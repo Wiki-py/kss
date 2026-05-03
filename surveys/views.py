@@ -286,34 +286,90 @@ def export_clan_data_pdf(request):
         }
         clans_data.append(clan_info)
     
-    # Generate PDF
-    from django.template.loader import render_to_string
-    from weasyprint import HTML, CSS
-    import tempfile
-    import os
+    # Generate PDF using ReportLab
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from io import BytesIO
     
-    # Render HTML template
-    html_string = render_to_string('surveys/admin/pdf/clan_data_pdf.html', {
-        'clans_data': clans_data,
-        'total_clans': clans.count(),
-        'generated_date': timezone.now()
-    })
+    # Create PDF buffer
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
     
-    # Create PDF
-    html = HTML(string=html_string)
-    css = CSS(string='''
-        @page { margin: 1cm; }
-        body { font-family: Arial, sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .clan-section { margin-bottom: 30px; page-break-inside: avoid; }
-        .clan-title { font-size: 16px; font-weight: bold; color: #2c3e50; }
-        .info-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        .info-table th, .info-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .info-table th { background-color: #f2f2f2; }
-        .response-item { margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 3px solid #3498db; }
-    ''')
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        alignment=1,  # Center
+        textColor=colors.darkblue
+    )
     
-    pdf = html.write_pdf(stylesheets=[css])
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        textColor=colors.darkgreen
+    )
+    
+    # Build PDF content
+    content = []
+    
+    # Title
+    content.append(Paragraph("OBB Clan Data Report", title_style))
+    content.append(Spacer(1, 12))
+    content.append(Paragraph(f"Total Clans: {clans.count()}", styles['Normal']))
+    content.append(Paragraph(f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+    content.append(Spacer(1, 20))
+    
+    # Add clan data
+    for clan_data in clans_data:
+        clan = clan_data['clan']
+        
+        # Clan title
+        content.append(Paragraph(f"Clan: {clan.name}", heading_style))
+        
+        # Clan information table
+        clan_info_data = [
+            ['Village', clan.village or 'N/A'],
+            ['Parish', clan.parish or 'N/A'],
+            ['Sub County', clan.sub_county or 'N/A'],
+            ['District', clan.district or 'N/A'],
+            ['Clan Head', clan.clan_head_name or 'N/A'],
+            ['Contact', clan.clan_head_contact or 'N/A'],
+            ['Email', clan.clan_head_email or 'N/A'],
+            ['Status', 'Active' if clan.is_active else 'Inactive'],
+            ['Sub-clans Count', str(clan_data['sub_clans_count'])],
+            ['Ridges Count', str(clan_data['ridges_count'])],
+            ['Survey Responses', str(clan_data['response_count'])],
+        ]
+        
+        clan_table = Table(clan_info_data, colWidths=[2*inch, 3*inch])
+        clan_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        content.append(clan_table)
+        content.append(Spacer(1, 20))
+    
+    # Build PDF
+    doc.build(content)
+    
+    # Get PDF value
+    pdf = buffer.getvalue()
+    buffer.close()
     
     # Create response
     response = HttpResponse(pdf, content_type='application/pdf')
@@ -349,31 +405,116 @@ def export_sub_clan_data_pdf(request):
         }
         sub_clans_data.append(sub_clan_info)
     
-    # Generate PDF
-    from django.template.loader import render_to_string
-    from weasyprint import HTML, CSS
+    # Generate PDF using ReportLab
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from io import BytesIO
     
-    html_string = render_to_string('surveys/admin/pdf/sub_clan_data_pdf.html', {
-        'sub_clans_data': sub_clans_data,
-        'total_sub_clans': sub_clans.count(),
-        'generated_date': timezone.now()
-    })
+    # Create PDF buffer
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
     
-    html = HTML(string=html_string)
-    css = CSS(string='''
-        @page { margin: 1cm; }
-        body { font-family: Arial, sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .sub-clan-section { margin-bottom: 30px; page-break-inside: avoid; }
-        .sub-clan-title { font-size: 16px; font-weight: bold; color: #2c3e50; }
-        .info-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        .info-table th, .info-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .info-table th { background-color: #f2f2f2; }
-        .ridge-item { margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 3px solid #e74c3c; }
-    ''')
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        alignment=1,  # Center
+        textColor=colors.darkblue
+    )
     
-    pdf = html.write_pdf(stylesheets=[css])
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        textColor=colors.darkgreen
+    )
     
+    # Build PDF content
+    content = []
+    
+    # Title
+    content.append(Paragraph("OBB Sub-Clan Data Report", title_style))
+    content.append(Spacer(1, 12))
+    content.append(Paragraph(f"Total Sub-Clans: {sub_clans.count()}", styles['Normal']))
+    content.append(Paragraph(f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+    content.append(Spacer(1, 20))
+    
+    # Add sub-clan data
+    for sub_clan_data in sub_clans_data:
+        sub_clan = sub_clan_data['sub_clan']
+        
+        # Sub-clan title
+        content.append(Paragraph(f"Sub-Clan: {sub_clan.name}", heading_style))
+        
+        # Sub-clan information table
+        sub_clan_info_data = [
+            ['Parent Clan', sub_clan.clan.name if sub_clan.clan else 'N/A'],
+            ['Leader Name', sub_clan.leader_name or 'N/A'],
+            ['Contact', sub_clan.leader_contact or 'N/A'],
+            ['Email', sub_clan.leader_email or 'N/A'],
+            ['Status', 'Active' if sub_clan.is_active else 'Inactive'],
+            ['Ridges Count', str(sub_clan_data['ridges_count'])],
+        ]
+        
+        sub_clan_table = Table(sub_clan_info_data, colWidths=[2*inch, 3*inch])
+        sub_clan_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        content.append(sub_clan_table)
+        
+        # Add ridges if any
+        if sub_clan_data['ridges']:
+            content.append(Spacer(1, 12))
+            content.append(Paragraph("Ridges:", styles['Heading3']))
+            
+            ridge_data = [['Name', 'Leader', 'Contact', 'Status']]
+            for ridge in sub_clan_data['ridges']:
+                ridge_data.append([
+                    ridge.name or 'N/A',
+                    ridge.leader_name or 'N/A',
+                    ridge.leader_contact or 'N/A',
+                    'Active' if ridge.is_active else 'Inactive'
+                ])
+            
+            ridge_table = Table(ridge_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1*inch])
+            ridge_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            content.append(ridge_table)
+        
+        content.append(Spacer(1, 20))
+    
+    # Build PDF
+    doc.build(content)
+    
+    # Get PDF value
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create response
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="sub_clan_data_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     
@@ -398,30 +539,85 @@ def export_ridge_data_pdf(request):
     # Get all ridges data
     ridges_data = Ridge.objects.all().order_by('sub_clan__clan__name', 'sub_clan__name', 'name')
     
-    # Generate PDF
-    from django.template.loader import render_to_string
-    from weasyprint import HTML, CSS
+    # Generate PDF using ReportLab
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from io import BytesIO
     
-    html_string = render_to_string('surveys/admin/pdf/ridge_data_pdf.html', {
-        'ridges_data': ridges_data,
-        'total_ridges': ridges_data.count(),
-        'generated_date': timezone.now()
-    })
+    # Create PDF buffer
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
     
-    html = HTML(string=html_string)
-    css = CSS(string='''
-        @page { margin: 1cm; }
-        body { font-family: Arial, sans-serif; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .ridge-section { margin-bottom: 20px; page-break-inside: avoid; }
-        .ridge-title { font-size: 14px; font-weight: bold; color: #2c3e50; }
-        .info-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        .info-table th, .info-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .info-table th { background-color: #f2f2f2; }
-    ''')
+    # Get styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        alignment=1,  # Center
+        textColor=colors.darkblue
+    )
     
-    pdf = html.write_pdf(stylesheets=[css])
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        textColor=colors.darkgreen
+    )
     
+    # Build PDF content
+    content = []
+    
+    # Title
+    content.append(Paragraph("OBB Ridge Data Report", title_style))
+    content.append(Spacer(1, 12))
+    content.append(Paragraph(f"Total Ridges: {ridges_data.count()}", styles['Normal']))
+    content.append(Paragraph(f"Generated: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+    content.append(Spacer(1, 20))
+    
+    # Add ridge data
+    for ridge in ridges_data:
+        # Ridge title
+        content.append(Paragraph(f"Ridge: {ridge.name}", heading_style))
+        
+        # Ridge information table
+        ridge_info_data = [
+            ['Parent Sub-Clan', ridge.sub_clan.name if ridge.sub_clan else 'N/A'],
+            ['Parent Clan', ridge.sub_clan.clan.name if ridge.sub_clan and ridge.sub_clan.clan else 'N/A'],
+            ['Leader Name', ridge.leader_name or 'N/A'],
+            ['Contact', ridge.leader_contact or 'N/A'],
+            ['Email', ridge.leader_email or 'N/A'],
+            ['Status', 'Active' if ridge.is_active else 'Inactive'],
+        ]
+        
+        ridge_table = Table(ridge_info_data, colWidths=[2*inch, 3*inch])
+        ridge_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        content.append(ridge_table)
+        content.append(Spacer(1, 20))
+    
+    # Build PDF
+    doc.build(content)
+    
+    # Get PDF value
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create response
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="ridge_data_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     

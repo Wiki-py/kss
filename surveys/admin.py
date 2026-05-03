@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import AdminSite
+from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import Survey, Question, SurveyResponse, Answer
@@ -238,6 +239,9 @@ if clan_models_available:
 # ──────────────────────────────────────────────
 # REGISTER MODELS WITH SUPER ADMIN SITE ONLY
 # ──────────────────────────────────────────────
+
+# Register User model with super admin site
+super_admin_site.register(User)
 
 # Register survey models with super admin site
 super_admin_site.register(Survey, SurveyAdmin)

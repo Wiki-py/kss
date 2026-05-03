@@ -1,0 +1,218 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Create Clan - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="bi bi-plus-circle text-gradient me-2"></i>Create New Clan
+                    </h1>
+                    <p class="text-muted mb-0">Create a new clan for the Bwamba Kingdom and add questions to collect information.</p>
+                </div>
+                <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Surveys
+                </a>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-info-circle text-gradient me-2"></i>Basic Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="bi bi-people me-1"></i>Clan Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="name" id="name" class="form-control" 
+                                       placeholder="Enter the name of your clan" required>
+                                <small class="text-muted">Choose a meaningful name that represents your clan in the Bwamba Kingdom</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-paragraph me-1"></i>Clan Description
+                        </label>
+                        <textarea name="description" id="description" class="form-control" rows="3" 
+                                  placeholder="Describe your clan's purpose, history, and significance"></textarea>
+                        <small class="text-muted">Explain the background and importance of your clan in the Bwamba Kingdom</small>
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-geo-alt text-gradient me-2"></i>Location Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="village" class="form-label">
+                                    <i class="bi bi-house me-1"></i>Village <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="village" id="village" class="form-control" 
+                                       placeholder="Enter village name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="parish" class="form-label">
+                                    <i class="bi bi-building me-1"></i>Parish <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="parish" id="parish" class="form-control" 
+                                       placeholder="Enter parish name" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sub_county" class="form-label">
+                                    <i class="bi bi-map me-1"></i>Sub-County <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="sub_county" id="sub_county" class="form-control" 
+                                       placeholder="Enter sub-county name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="district" class="form-label">
+                                    <i class="bi bi-geo-alt-fill me-1"></i>District <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="district" id="district" class="form-control" 
+                                       placeholder="Enter district name" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leadership Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-person-badge text-gradient me-2"></i>Leadership Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="clan_head_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Clan Head Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="clan_head_name" id="clan_head_name" class="form-control" 
+                                       placeholder="Enter the name of the clan head" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="clan_head_contact" class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Contact Number
+                                </label>
+                                <input type="text" name="clan_head_contact" id="clan_head_contact" class="form-control" 
+                                       placeholder="Enter contact number (optional)">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="clan_head_email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i>Email Address
+                                </label>
+                                <input type="email" name="clan_head_email" id="clan_head_email" class="form-control" 
+                                       placeholder="Enter email address (optional)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-gear text-gradient me-2"></i>Clan Settings
+                    </h5>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" id="is_active" 
+                               class="form-check-input" checked>
+                        <label for="is_active" class="form-check-label">
+                            <i class="bi bi-check-circle me-1"></i>Activate clan immediately
+                        </label>
+                        <small class="text-muted d-block">Uncheck this if you want to activate the clan later</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-1"></i>Create Clan
+                    </button>
+                    <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="custom-card p-4 mt-4">
+            <h5 class="mb-3">
+                <i class="bi bi-lightbulb me-2"></i>Tips for Creating Great Clans
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Be culturally specific</h6>
+                            <small class="text-muted">Focus on questions relevant to Bwamba Kingdom traditions</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Use clear language</h6>
+                            <small class="text-muted">Ensure questions are easily understood by community members</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Include family details</h6>
+                            <small class="text-muted">Collect information about clan structure and relationships</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Respect privacy</h6>
+                            <small class="text-muted">Be mindful of sensitive cultural information</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,559 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Admin Dashboard - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="custom-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-2">
+                <i class="bi bi-shield-check text-gradient me-2"></i>Admin Dashboard
+            </h1>
+            <p class="text-muted mb-0">Manage clans, surveyers, and view analyzed data</p>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mt-2">
+    <div class="col">
+        <div class="card border-primary shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-people display-4 text-primary"></i>
+                <h3 class="mt-2">{{ total_clans }}</h3>
+                <p class="text-muted mb-0">Total Clans</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card border-success shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-diagram-3 display-4 text-success"></i>
+                <h3 class="mt-2">{{ total_sub_clans }}</h3>
+                <p class="text-muted mb-0">Sub-Clans</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card border-info shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-person-badge display-4 text-info"></i>
+                <h3 class="mt-2">{{ total_surveyers }}</h3>
+                <p class="text-muted mb-0">Surveyers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card border-warning shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-clipboard-data display-4 text-warning"></i>
+                <h3 class="mt-2">{{ total_responses }}</h3>
+                <p class="text-muted mb-0">Data Collections</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clans Management Section -->
+{% if clan_models_available %}
+<div class="custom-card p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-people text-gradient me-2"></i>All Clans
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list me-1"></i>View All Clans
+            </a>
+        </div>
+    </div>
+    
+    {% if clan_stats %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for clan in clan_stats %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm {% if not clan.is_active %}border-secondary{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">{{ clan.name }}</h5>
+                                <div class="d-flex gap-1">
+                                    {% if not clan.is_active %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                    <span class="badge bg-primary">Admin View</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-person-circle me-1"></i>Created by {{ clan.created_by.username }}
+                                    <br>
+                                    <i class="bi bi-calendar me-1"></i>{{ clan.created_at|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-diagram-3 me-1"></i>{{ clan.sub_clans_total }} sub-clan{{ clan.sub_clans_total|pluralize }}
+                                    <br>
+                                    <i class="bi bi-diagram-2 me-1"></i>{{ clan.ridges_total }} ridge{{ clan.ridges_total|pluralize }}
+                                    <br>
+                                    <i class="bi bi-clipboard-data me-1"></i>{{ clan.responses_total }} data collection{{ clan.responses_total|pluralize }}
+                                </small>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'surveys:survey_detail' clan.id %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye me-1"></i>View Clan Details
+                                </a>
+                                <a href="{% url 'surveys:survey_results' clan.id %}" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-bar-chart me-1"></i>View Data
+                                </a>
+                                <a href="{% url 'surveys:take_survey' clan.id %}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-clipboard-data me-1"></i>Collect Data
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No clans available yet</h3>
+            <p class="text-muted">Surveyers haven't created any clans yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Surveyers Management Section -->
+<div class="custom-card p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-person-badge text-gradient me-2"></i>Surveyers
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="#" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i>Export Surveyers
+            </a>
+        </div>
+    </div>
+    
+    {% if surveyer_stats %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Surveyer</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                        <th>Clans Created</th>
+                        <th>Data Collections</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for surveyer in surveyer_stats %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-muted"></i>
+                                    {{ surveyer.username }}
+                                </div>
+                            </td>
+                            <td>{{ surveyer.email }}</td>
+                            <td>{{ surveyer.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ surveyer.clans_created }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ surveyer.responses_count }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-info">
+                                        <i class="bi bi-bar-chart"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-person-badge display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No surveyers available</h3>
+            <p class="text-muted">No surveyers have registered yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Recent Data Collections -->
+<div class="custom-card p-4 mt-4">
+    <h2>
+        <i class="bi bi-clock-history text-gradient me-2"></i>Recent Data Collections
+    </h2>
+    
+    {% if recent_collections %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Surveyer</th>
+                        <th>Clan</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for collection in recent_collections %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-muted"></i>
+                                    {{ collection.user.username }}
+                                </div>
+                            </td>
+                            <td>{{ collection.survey.title }}</td>
+                            <td>{{ collection.submitted_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="#" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-eye me-1"></i>View Response
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard-data display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No data collections yet</h3>
+            <p class="text-muted">No survey data has been collected.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Data Management Section -->
+<div class="custom-card p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-database text-gradient me-2"></i>Data Management
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'admin_dash:export_clan_data_pdf' %}" class="btn btn-success">
+                <i class="bi bi-file-earmark-pdf me-1"></i>Export All Data
+            </a>
+        </div>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="col">
+            <div class="card border-primary h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 text-primary"></i>
+                    <h5 class="mt-3">Clan Data</h5>
+                    <p class="text-muted">View clans and navigate through hierarchy</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'admin_dash:view_clan_data' %}" class="btn btn-primary">
+                            <i class="bi bi-diagram-3 me-1"></i>View Clans
+                        </a>
+                        <a href="{% url 'admin_dash:export_clan_data_pdf' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-download me-1"></i>Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-info h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-diagram-3 display-4 text-info"></i>
+                    <h5 class="mt-3">Sub-Clan Data</h5>
+                    <p class="text-muted">Accessed through clan hierarchy navigation</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'admin_dash:view_clan_data' %}" class="btn btn-info">
+                            <i class="bi bi-arrow-up-right me-1"></i>Navigate via Clans
+                        </a>
+                        <a href="{% url 'admin_dash:export_sub_clan_data_pdf' %}" class="btn btn-outline-info">
+                            <i class="bi bi-download me-1"></i>Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-warning h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-diagram-2 display-4 text-warning"></i>
+                    <h5 class="mt-3">Ridge Data</h5>
+                    <p class="text-muted">Accessed through sub-clan hierarchy navigation</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'admin_dash:view_clan_data' %}" class="btn btn-warning">
+                            <i class="bi bi-arrow-up-right me-1"></i>Navigate via Clans
+                        </a>
+                        <a href="{% url 'admin_dash:export_ridge_data_pdf' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-download me-1"></i>Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert alert-info mt-4">
+        <h5><i class="bi bi-info-circle me-2"></i>Hierarchical Navigation</h5>
+        <p class="mb-2">Navigate through the data hierarchy:</p>
+        <ol>
+            <li><strong>Clans</strong> - Click "View Clans" to see all clans</li>
+            <li><strong>Sub-Clans</strong> - Within each clan, you can view associated sub-clans</li>
+            <li><strong>Ridges</strong> - Within each sub-clan, you can view associated ridges</li>
+        </ol>
+        <p class="mb-0"><small>Start by clicking "View Clans" to begin hierarchical navigation.</small></p>
+    </div>
+</div>
+
+<!-- Sub-Clan Survey Management Section -->
+<div class="custom-card p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-diagram-3 text-gradient me-2"></i>Sub-Clan Survey Management
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="#" class="btn btn-success">
+                <i class="bi bi-plus-circle me-1"></i>Create Sub-Clan Survey
+            </a>
+        </div>
+    </div>
+    
+    {% if clan_surveys_with_sub_clans %}
+        <div class="row row-cols-1 row-cols-lg-2 g-4">
+            {% for clan_data in clan_surveys_with_sub_clans %}
+                <div class="col">
+                    <div class="card border-warning h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title">{{ clan_data.survey.title }}</h5>
+                                <span class="badge bg-warning">Bwamba Clan</span>
+                            </div>
+                            
+                            <p class="card-text text-muted small">{{ clan_data.survey.description|truncatewords:15 }}</p>
+                            
+                            <div class="mb-3">
+                                <span class="badge bg-success">Active</span>
+                                <small class="text-muted ms-2">
+                                    <i class="bi bi-person-circle me-1"></i>{{ clan_data.survey.created_by.username }}
+                                </small>
+                            </div>
+                            
+                            <!-- Sub-Clans Section -->
+                            {% if clan_data.sub_clans %}
+                                <div class="mt-3 pt-3 border-top">
+                                    <h6 class="text-muted mb-2">
+                                        <i class="bi bi-diagram-3 me-1"></i>Sub-Clans ({{ clan_data.sub_clans|length }})
+                                    </h6>
+                                    <div class="row row-cols-1 g-2">
+                                        {% for sub_clan_data in clan_data.sub_clans %}
+                                            <div class="col">
+                                                <div class="card card-sm border-info">
+                                                    <div class="card-body p-2">
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <h6 class="card-title mb-0 small">{{ sub_clan_data.sub_clan.name }}</h6>
+                                                            <span class="badge bg-info">Kanumbha</span>
+                                                        </div>
+                                                        
+                                                        <p class="card-text text-muted small mb-1">
+                                                            <i class="bi bi-geo-alt me-1"></i>{{ sub_clan_data.sub_clan.address|truncatewords:8 }}
+                                                        </p>
+                                                        
+                                                        <div class="mb-1">
+                                                            {% if sub_clan_data.sub_clan.is_active %}
+                                                                <span class="badge bg-success">Active</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Inactive</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        
+                                                        <div class="mb-1">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-person me-1"></i>{{ sub_clan_data.sub_clan.leader_name }}
+                                                            </small>
+                                                        </div>
+                                                        
+                                                        <!-- Ridges Dropdown -->
+                                                        <div class="dropdown mb-2">
+                                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" type="button" id="ridgesDropdownAdmin{{ sub_clan_data.sub_clan.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="bi bi-diagram-3 me-1"></i>
+                                                                Ridges ({{ sub_clan_data.sub_clan.ridges.count }})
+                                                            </button>
+                                                            <ul class="dropdown-menu w-100" aria-labelledby="ridgesDropdownAdmin{{ sub_clan_data.sub_clan.id }}">
+                                                                {% for ridge in sub_clan_data.sub_clan.ridges.all %}
+                                                                    <li>
+                                                                        <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'surveys:ridge_obb_survey' ridge.id %}">
+                                                                            <div>
+                                                                                <strong>{{ ridge.name }}</strong>
+                                                                                <br>
+                                                                                <small class="text-muted">
+                                                                                    <i class="bi bi-person me-1"></i>{{ ridge.leader_name }}
+                                                                                    {% if ridge.leader_contact %}| {{ ridge.leader_contact }}{% endif %}
+                                                                                </small>
+                                                                            </div>
+                                                                            <div class="btn-group btn-group-sm">
+                                                                                <a href="{% url 'surveys:ridge_obb_survey' ridge.id %}" class="btn btn-primary btn-sm" title="OBB Survey">
+                                                                                    <i class="bi bi-file-earmark-text"></i>
+                                                                                </a>
+                                                                                <a href="{% url 'surveys:take_ridge_survey' ridge.id %}" class="btn btn-success btn-sm" title="Quick Survey">
+                                                                                    <i class="bi bi-clipboard-data"></i>
+                                                                                </a>
+                                                                            </div>
+                                                                        </a>
+                                                                    </li>
+                                                                {% empty %}
+                                                                    <li><a class="dropdown-item text-muted" href="#">No ridges created yet</a></li>
+                                                                    <li><hr class="dropdown-divider"></li>
+                                                                    <li>
+                                                                        <a class="dropdown-item text-primary" href="{% url 'surveys:create_ridge' sub_clan_data.sub_clan.id %}">
+                                                                            <i class="bi bi-plus-circle me-1"></i>Create First Ridge
+                                                                        </a>
+                                                                    </li>
+                                                                {% endfor %}
+                                                                {% if sub_clan_data.sub_clan.ridges.count > 0 %}
+                                                                    <li><hr class="dropdown-divider"></li>
+                                                                    <li>
+                                                                        <a class="dropdown-item text-primary" href="{% url 'surveys:create_ridge' sub_clan_data.sub_clan.id %}">
+                                                                            <i class="bi bi-plus-circle me-1"></i>Add New Ridge
+                                                                        </a>
+                                                                    </li>
+                                                                {% endif %}
+                                                            </ul>
+                                                        </div>
+                                                        
+                                                        <div class="d-grid gap-1">
+                                                            <!-- Sub-Clan Survey Actions -->
+                                                            <a href="{% url 'surveys:sub_clan_obb_survey' sub_clan_data.sub_clan.id %}" class="btn btn-primary btn-sm">
+                                                                <i class="bi bi-file-earmark-text me-1"></i>OBB Survey
+                                                            </a>
+                                                            <a href="{% url 'surveys:take_sub_clan_survey' sub_clan_data.sub_clan.id %}" class="btn btn-success btn-sm">
+                                                                <i class="bi bi-clipboard-data me-1"></i>Quick Survey
+                                                            </a>
+                                                            <a href="{% url 'surveys:create_ridge' sub_clan_data.sub_clan.id %}" class="btn btn-info btn-sm">
+                                                                <i class="bi bi-diagram-3 me-1"></i>Create Ridge
+                                                            </a>
+                                                            
+                                                            <!-- Create Sub-Clan Survey -->
+                                                            <a href="{% url 'surveys:create_sub_clan_survey' sub_clan_data.sub_clan.id %}" class="btn btn-outline-primary btn-sm">
+                                                                <i class="bi bi-plus-circle me-1"></i>Create Survey
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-diagram-3 display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No Sub-Clan Data Available</h3>
+            <p class="text-muted">No sub-clan surveys have been created yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Data Analytics Section -->
+<div class="custom-card p-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-graph-up text-gradient me-2"></i>Data Analytics
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="#" class="btn btn-primary">
+                <i class="bi bi-download me-1"></i>Export All Data
+            </a>
+            <a href="#" class="btn btn-success">
+                <i class="bi bi-file-earmark-bar-graph me-1"></i>Generate Reports
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Clan Distribution</h5>
+                    <div class="text-center py-3">
+                        <i class="bi bi-pie-chart display-4 text-primary"></i>
+                        <p class="text-muted mt-2">Analytics charts will be displayed here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Data Collection Trends</h5>
+                    <div class="text-center py-3">
+                        <i class="bi bi-graph-up display-4 text-success"></i>
+                        <p class="text-muted mt-2">Trend analysis will be displayed here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.custom-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

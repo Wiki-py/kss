@@ -1,0 +1,199 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Create Sub-Clan Survey - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="bi bi-diagram-3 text-gradient me-2"></i>Create Sub-Clan Survey
+                    </h1>
+                    <p class="text-muted mb-0">Create a questionnaire for {{ sub_clan.name }} in the Bwamba Kingdom.</p>
+                </div>
+                <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Clans
+                </a>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="sub_clan_id" value="{{ sub_clan.id }}">
+                
+                <!-- Basic Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-info-circle text-gradient me-2"></i>Survey Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">
+                                    <i class="bi bi-clipboard-data me-1"></i>Survey Title <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="title" id="title" class="form-control" 
+                                       placeholder="Enter the title of the sub-clan survey" required>
+                                <small class="text-muted">Choose a meaningful title that represents this sub-clan questionnaire</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-paragraph me-1"></i>Description
+                        </label>
+                        <textarea name="description" id="description" class="form-control" rows="3" 
+                                  placeholder="Enter a description for this sub-clan survey"></textarea>
+                        <small class="text-muted">Provide information about what this survey covers</small>
+                    </div>
+                </div>
+
+                <!-- Survey Settings -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-gear text-gradient me-2"></i>Survey Settings
+                    </h5>
+                    
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="is_active" id="is_active" 
+                               class="form-check-input" checked>
+                        <label for="is_active" class="form-check-label">
+                            <i class="bi bi-check-circle me-1"></i>Activate survey immediately
+                        </label>
+                        <small class="text-muted d-block">Uncheck this if you want to activate the survey later</small>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" name="allow_anonymous" id="allow_anonymous" 
+                               class="form-check-input" checked>
+                        <label for="allow_anonymous" class="form-check-label">
+                            <i class="bi bi-person-badge me-1"></i>Allow anonymous responses
+                        </label>
+                        <small class="text-muted d-block">Uncheck this if you require users to be logged in</small>
+                    </div>
+                </div>
+
+                <!-- Sub-Clan Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-diagram-3 text-gradient me-2"></i>Sub-Clan Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-diagram-3 me-1"></i>Sub-Clan Name
+                                </label>
+                                <input type="text" class="form-control" value="{{ sub_clan.name }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-geo-alt me-1"></i>Address
+                                </label>
+                                <input type="text" class="form-control" value="{{ sub_clan.address }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-person me-1"></i>Leader Name
+                                </label>
+                                <input type="text" class="form-control" value="{{ sub_clan.leader_name }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Contact
+                                </label>
+                                <input type="text" class="form-control" value="{{ sub_clan.leader_contact }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-1"></i>Create Sub-Clan Survey
+                    </button>
+                    <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="custom-card p-4 mt-4">
+            <h5 class="mb-3">
+                <i class="bi bi-lightbulb me-2"></i>About Sub-Clan Surveys
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-info-circle text-info me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">What is a Sub-Clan Survey?</h6>
+                            <small class="text-muted">A questionnaire specifically designed for collecting data from a particular sub-clan (Kanumbha) within the Bwamba Kingdom</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-people text-success me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Target Audience</h6>
+                            <small class="text-muted">Members and residents of the specific sub-clan where data collection is focused</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-clipboard-data text-warning me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Data Collection</h6>
+                            <small class="text-muted">Collects detailed information specific to the sub-clan's demographics, culture, and needs</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-diagram-3 text-primary me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Hierarchical Structure</h6>
+                            <small class="text-muted">Part of the broader clan data collection system, providing granular insights</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <h5><i class="bi bi-info-circle me-2"></i>Automatic Question Copy</h5>
+            <p class="mb-2">
+                <strong>This sub-clan survey will automatically copy all questions from the parent clan survey.</strong>
+            </p>
+            <p class="mb-2">
+                This ensures consistency in data collection across the clan hierarchy while allowing sub-clan specific responses.
+            </p>
+            <ul class="mb-0">
+                <li>All question types will be preserved (text, multiple choice, etc.)</li>
+                <li>Question order and requirements will be maintained</li>
+                <li>You can edit questions after creation if needed</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Create Ridge Survey - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-plus me-2"></i>
+                        Create Ridge Survey
+                        <small class="text-white-50">for {{ ridge.name }}</small>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="ridge_id" value="{{ ridge.id }}">
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Survey Title *</label>
+                            <input type="text" class="form-control" id="title" name="title" required
+                                   value="{{ ridge.name }} Baseline Survey"
+                                   placeholder="Enter a title for this ridge survey">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Survey Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"
+                                      placeholder="Provide a description of what this survey will cover">{{ ridge.name }} comprehensive baseline survey questionnaire for data collection and analysis.</textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                    <label class="form-check-label" for="is_active">
+                                        Active Survey
+                                    </label>
+                                </div>
+                                <div class="form-text">Enable this survey for data collection</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="allow_anonymous" name="allow_anonymous" checked>
+                                    <label class="form-check-label" for="allow_anonymous">
+                                        Allow Anonymous Responses
+                                    </label>
+                                </div>
+                                <div class="form-text">Users can respond without logging in</div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Automatic Question Copying:</strong> When you create this ridge survey, questions from the parent sub-clan survey will be automatically copied to ensure consistency across the hierarchy.
+                        </div>
+
+                        <div class="alert alert-light border">
+                            <h6 class="mb-2"><i class="bi bi-diagram-3 me-2"></i>Ridge Information</h6>
+                            <p class="mb-1"><strong>Name:</strong> {{ ridge.name }}</p>
+                            <p class="mb-1"><strong>Leader:</strong> {{ ridge.leader_name }}</p>
+                            {% if ridge.leader_contact %}
+                                <p class="mb-1"><strong>Contact:</strong> {{ ridge.leader_contact }}</p>
+                            {% endif %}
+                            <p class="mb-0"><strong>Parent Sub-Clan:</strong> {{ ridge.sub_clan.name }}</p>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'surveys:survey_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Surveys
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-plus-circle me-1"></i>Create Ridge Survey
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

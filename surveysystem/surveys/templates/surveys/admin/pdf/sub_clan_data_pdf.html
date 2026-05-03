@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sub-Clan Data Report</title>
+</head>
+<body>
+    <div class="header">
+        <h1>Bwamba Kingdom Baseline Survey System</h1>
+        <h2>Sub-Clan (Kanumbha) Data Report</h2>
+        <p>Generated on: {{ generated_date|date:"F d, Y H:i" }}</p>
+        <p>Total Sub-Clans: {{ total_sub_clans }}</p>
+    </div>
+
+    {% for sub_clan_info in sub_clans_data %}
+    <div class="sub-clan-section">
+        <div class="sub-clan-title">{{ sub_clan_info.sub_clan.name }}</div>
+        
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Basic Information</th>
+            </tr>
+            <tr>
+                <td width="30%">Sub-Clan Name:</td>
+                <td>{{ sub_clan_info.sub_clan.name }}</td>
+            </tr>
+            <tr>
+                <td>Parent Clan:</td>
+                <td>{{ sub_clan_info.sub_clan.clan.name }}</td>
+            </tr>
+            <tr>
+                <td>Address:</td>
+                <td>{{ sub_clan_info.sub_clan.address|default:"No address provided" }}</td>
+            </tr>
+            <tr>
+                <td>Status:</td>
+                <td>{% if sub_clan_info.sub_clan.is_active %}Active{% else %}Inactive{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Created By:</td>
+                <td>{{ sub_clan_info.sub_clan.created_by.username }}</td>
+            </tr>
+            <tr>
+                <td>Created Date:</td>
+                <td>{{ sub_clan_info.sub_clan.created_at|date:"F d, Y" }}</td>
+            </tr>
+        </table>
+
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Leadership Information</th>
+            </tr>
+            <tr>
+                <td width="30%">Leader Name:</td>
+                <td>{{ sub_clan_info.sub_clan.leader_name|default:"Not specified" }}</td>
+            </tr>
+            <tr>
+                <td>Leader Contact:</td>
+                <td>{{ sub_clan_info.sub_clan.leader_contact|default:"Not specified" }}</td>
+            </tr>
+        </table>
+
+        <table class="info-table">
+            <tr>
+                <th colspan="2">Hierarchy Statistics</th>
+            </tr>
+            <tr>
+                <td width="30%">Ridges:</td>
+                <td>{{ sub_clan_info.ridges_count }}</td>
+            </tr>
+        </table>
+
+        {% if sub_clan_info.ridges %}
+        <h4>Ridges under {{ sub_clan_info.sub_clan.name }} ({{ sub_clan_info.ridges_count }})</h4>
+        {% for ridge in sub_clan_info.ridges %}
+        <div class="ridge-item">
+            <strong>{{ ridge.name }}</strong> - Leader: {{ ridge.leader_name }}
+            {% if ridge.leader_contact %} ({{ ridge.leader_contact }}){% endif %}
+            - Created: {{ ridge.created_at|date:"F d, Y" }}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="footer">
+        <p>End of Report - Bwamba Kingdom Baseline Survey System</p>
+    </div>
+</body>
+</html>

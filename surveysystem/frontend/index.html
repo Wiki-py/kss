@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#dc2626">
+    <meta name="description" content="OBB Baseline Survey System - Progressive Web App">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="OBB Survey">
+    <title>OBB Baseline Survey System</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23dc2626'/><text x='50' y='50' font-family='Arial' font-size='50' fill='white' text-anchor='middle'>OBB</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23dc2626'/><text x='50' y='50' font-family='Arial' font-size='50' fill='white' text-anchor='middle'>OBB</text></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/offline.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Signature Pad -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    
+    <!-- Dexie (IndexedDB Wrapper) -->
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Install Prompt Banner -->
+    <div id="installPrompt" class="hidden fixed top-0 left-0 right-0 bg-yellow-500 text-black p-4 z-50 text-center">
+        <div class="max-w-md mx-auto">
+            <i class="fas fa-download text-2xl mb-2"></i>
+            <h3 class="text-lg font-bold">Install OBB Survey App</h3>
+            <p class="text-sm">Get offline access and faster performance</p>
+            <button id="installBtn" class="mt-3 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                <i class="fas fa-plus mr-2"></i>Install App
+            </button>
+        </div>
+    </div>
+    
+    <!-- Offline Indicator -->
+    <div id="offlineIndicator" class="hidden fixed top-0 left-0 right-0 bg-red-600 text-white p-3 z-40 text-center">
+        <i class="fas fa-wifi-slash mr-2"></i>
+        <span>You're offline. Some features may be limited.</span>
+    </div>
+    
+    <!-- Sync Status -->
+    <div id="syncStatus" class="hidden fixed top-0 left-0 right-0 bg-yellow-500 text-black p-3 z-40 text-center">
+        <i class="fas fa-sync fa-spin mr-2"></i>
+        <span>Syncing data...</span>
+    </div>
+    
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="status-online">Online</div>
+    
+    <!-- Offline Storage Indicator -->
+    <div id="offlineStorageIndicator" class="offline-storage-indicator">
+        <i class="fas fa-database mr-1"></i>
+        <span id="storageCount">0</span> items
+    </div>
+    
+    <!-- Main App Container -->
+    <div id="app" class="min-h-screen">
+        <!-- Navigation -->
+        <nav id="navbar" class="bg-white shadow-lg border-b-4 border-red-600">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 flex items-center">
+                            <button id="backBtn" class="text-gray-600 hover:text-red-600 mr-3 hidden" onclick="AppSimple.goBack()">
+                                <i class="fas fa-arrow-left text-xl"></i>
+                            </button>
+                            <i class="fas fa-crown text-red-600 text-2xl mr-2"></i>
+                            <span class="text-xl font-bold text-red-600">OBB Kingdom</span>
+                        </div>
+                        <div class="hidden md:block ml-10">
+                            <div class="flex items-baseline space-x-4">
+                                <a href="#" class="nav-link text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium" data-page="dashboard">Dashboard</a>
+                                <a href="#" class="nav-link text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium" data-page="surveys">Surveys</a>
+                                <a href="#" class="nav-link text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium" data-page="reports">Reports</a>
+                                <a href="#" class="nav-link text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium" data-page="settings">Settings</a>
+                                <a href="#" class="nav-link text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium" data-page="login">Login</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 hidden">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                        <button class="md:hidden bg-gray-200 p-2 rounded-md" onclick="AppSimple.toggleMobileMenu()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile menu -->
+            <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="#" class="nav-link text-gray-700 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium" data-page="dashboard">Dashboard</a>
+                    <a href="#" class="nav-link text-gray-700 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium" data-page="surveys">Surveys</a>
+                    <a href="#" class="nav-link text-gray-700 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium" data-page="reports">Reports</a>
+                    <a href="#" class="nav-link text-gray-700 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium" data-page="settings">Settings</a>
+                    <a href="#" class="nav-link text-gray-700 hover:text-red-600 block px-3 py-2 rounded-md text-base font-medium" data-page="login">Login</a>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content Area -->
+        <main id="mainContent" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Login Page -->
+            <div id="loginPage" class="page-content">
+                <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+                    <div class="max-w-md w-full space-y-8">
+                        <!-- Header -->
+                        <div class="text-center">
+                            <div class="mx-auto h-20 w-20 flex items-center justify-center rounded-full bg-red-600 shadow-lg mb-4">
+                                <div class="h-16 w-16 flex items-center justify-center">
+                                    <i class="fas fa-shield-check text-white text-2xl"></i>
+                                </div>
+                            </div>
+                            <h2 class="text-center text-3xl font-bold text-gray-900">OBB Survey System</h2>
+                            <p class="mt-2 text-center text-sm text-gray-600">
+                                Kingdom Survey Baseline Data Collection
+                            </p>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form id="loginForm" class="mt-8 space-y-6 bg-white shadow-xl rounded-lg p-8">
+                            <!-- Loading Indicator -->
+                            <div id="loginLoading" class="hidden text-center">
+                                <div class="inline-flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-gray-600">Authenticating...</span>
+                                </div>
+                            </div>
+
+                            <!-- Success Message -->
+                            <div id="successMessage" class="hidden text-center">
+                                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-check-circle text-green-400"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-green-700">Login successful! Redirecting...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Error Message -->
+                            <div id="errorMessage" class="hidden">
+                                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <i class="fas fa-exclamation-circle text-red-400"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p id="errorText" class="text-sm text-red-700"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Fields -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                                    <div class="mt-1 relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-user text-gray-400"></i>
+                                        </div>
+                                        <input id="username" name="username" type="text" required 
+                                               class="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm" 
+                                               placeholder="Enter your username"
+                                               autocomplete="username">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                                    <div class="mt-1 relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-lock text-gray-400"></i>
+                                        </div>
+                                        <input id="password" name="password" type="password" required 
+                                               class="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm" 
+                                               placeholder="Enter your password"
+                                               autocomplete="current-password">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div>
+                                <button type="submit" id="loginBtn" 
+                                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
+                                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                                        <i class="fas fa-sign-in-alt text-red-500 group-hover:text-red-400"></i>
+                                    </span>
+                                    <span id="loginButtonText">Sign in</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Quick Access -->
+                        <div class="bg-white shadow-lg rounded-lg p-6">
+                            <h3 class="text-sm font-medium text-gray-700 mb-3">Quick Access</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-xs text-gray-600">
+                                    <span>Test User:</span>
+                                    <button onclick="quickLogin('wiki', 'admin')" class="text-red-600 hover:text-red-800 font-medium">Quick Login</button>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gray-600">
+                                    <span>Agent:</span>
+                                    <span class="text-gray-500">agent001</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gray-600">
+                                    <span>Admin:</span>
+                                    <span class="text-gray-500">admin001</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <button onclick="useFallbackLogin()" class="w-full bg-orange-600 text-white px-3 py-2 rounded text-xs hover:bg-orange-700 transition-colors duration-200">
+                                    <i class="fas fa-shield-alt mr-1"></i>
+                                    Use Fallback Login (Offline Mode)
+                                </button>
+                                <p class="text-xs text-gray-500 mt-2">Bypasses backend authentication</p>
+                            </div>
+                        </div>
+
+                        <!-- Connection Status -->
+                        <div class="bg-white shadow-lg rounded-lg p-6">
+                            <h3 class="text-sm font-medium text-gray-700 mb-3">System Status</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-600">Backend Connection:</span>
+                                    <button onclick="testBackendConnection()" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors duration-200">
+                                        <i class="fas fa-network-wired mr-1"></i>
+                                        Test
+                                    </button>
+                                </div>
+                                <div id="connectionTestResult" class="text-xs p-2 bg-gray-50 rounded"></div>
+                                <div id="systemInfo" class="text-xs text-gray-500">
+                                    <p>API: <span id="apiUrl">http://127.0.0.1:8000/api</span></p>
+                                    <p>Status: <span id="connectionStatus" class="text-gray-400">Unknown</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other pages will be loaded here dynamically -->
+        </main>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Loading...</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">Please wait while we process your request.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- JavaScript Modules -->
+    <script src="js/api.js"></script>
+    <script src="js/offlineManager.js"></script>
+    <script src="js/completeSurveyForm.js?v=2"></script>
+    <script src="js/dataAnalysis.js"></script>
+    <script src="js/clanAPI.js"></script>
+    <script src="js/clanManagement.js"></script>
+    <script src="js/adminDashboard.js"></script>
+    <script src="js/superAdminDashboard.js"></script>
+    <script src="js/app-simple.js"></script>
+</body>
+</html>

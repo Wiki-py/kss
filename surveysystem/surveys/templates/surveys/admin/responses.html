@@ -1,0 +1,223 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Manage Responses - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Manage Responses</h1>
+    <p>View and analyze survey responses</p>
+</div>
+
+<div class="admin-actions">
+    <a href="{% url 'admin_dash:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<div class="filters-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <select name="survey" class="form-control">
+                <option value="">All Surveys</option>
+                {% for survey in surveys %}
+                    <option value="{{ survey.id }}" {% if survey_id|stringformat:"s" == survey.id|stringformat:"s" %}selected{% endif %}>{{ survey.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <input type="date" name="date_from" placeholder="From date" value="{{ date_from }}" class="form-control">
+        </div>
+        <div class="filter-group">
+            <input type="date" name="date_to" placeholder="To date" value="{{ date_to }}" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="?" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<div class="responses-table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Survey</th>
+                <th>Respondent</th>
+                <th>Email</th>
+                <th>Submitted</th>
+                <th>IP Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for response in page_obj %}
+                <tr>
+                    <td>
+                        <strong>{{ response.survey.title }}</strong>
+                        <br><small class="text-muted">{{ response.answers.count }} questions answered</small>
+                    </td>
+                    <td>
+                        {% if response.user %}
+                            {{ response.user.username }}
+                        {% else %}
+                            <em>Anonymous</em>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if response.respondent_email %}
+                            {{ response.respondent_email }}
+                        {% elif response.user %}
+                            {{ response.user.email }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ response.submitted_at|date:"M d, Y g:i A" }}</td>
+                    <td>{{ response.ip_address|default:"-" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'surveys:survey_results' response.survey.id %}" class="btn btn-sm btn-secondary">View Results</a>
+                            <a href="/admin/surveys/surveyresponse/{{ response.id }}/change/" class="btn btn-sm btn-primary">Details</a>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="empty-state">
+                            <h3>No responses found</h3>
+                            <p>No survey responses match the current filters.</p>
+                            <a href="{% url 'surveys:survey_list' %}" class="btn btn-primary">Browse Surveys</a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page=1{% if survey_id %}&survey={{ survey_id }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&laquo; First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if survey_id %}&survey={{ survey_id }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
+    {% endif %}
+    
+    <span class="current">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if survey_id %}&survey={{ survey_id }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if survey_id %}&survey={{ survey_id }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Last &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.responses-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table th {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.admin-table tr:hover {
+    background: #f7fafc;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    color: #718096;
+}
+
+.text-muted {
+    color: #718096;
+}
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .admin-table {
+        font-size: 0.875rem;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

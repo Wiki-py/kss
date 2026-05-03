@@ -1,0 +1,374 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Take Sub-Clan Survey: {{ sub_clan.name }} - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{{ clan_survey.title|default:"Sub-Clan Survey" }}</h1>
+    <p class="survey-description">Collecting data for {{ sub_clan.name }} sub-clan in {{ sub_clan.clan.name }} clan</p>
+    
+    {% if clan_survey.description %}
+        <p class="survey-description">{{ clan_survey.description }}</p>
+    {% endif %}
+    
+    <div class="progress-bar">
+        <div class="progress-info">
+            <span>Question <span id="current-question">1</span> of {{ questions.count }}</span>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user_responses_count > 0 %}
+    <div class="card">
+        <div class="alert alert-warning">
+            <strong>Already Completed:</strong> You have already completed this sub-clan survey.
+            <br>
+            <small>Each user can only submit one response per sub-clan survey.</small>
+        </div>
+        <div class="text-center">
+            <a href="{% url 'surveys:survey_list' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-1"></i>Return to Clans
+            </a>
+        </div>
+    </div>
+{% else %}
+    <form method="post" id="survey-form" class="survey-form">
+        {% csrf_token %}
+        
+        {% if not clan_survey.allow_anonymous and not user.is_authenticated %}
+            <div class="card">
+                <h2>Contact Information</h2>
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
+                    <small>We'll use this to identify your response.</small>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Sub-Clan Information Display -->
+        <div class="card">
+            <h2>Sub-Clan Information</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Sub-Clan Name</label>
+                        <input type="text" class="form-control" value="{{ sub_clan.name }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Parent Clan</label>
+                        <input type="text" class="form-control" value="{{ sub_clan.clan.name }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Leader Name</label>
+                        <input type="text" class="form-control" value="{{ sub_clan.leader_name }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Contact</label>
+                        <input type="text" class="form-control" value="{{ sub_clan.leader_contact }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea class="form-control" rows="2" readonly>{{ sub_clan.address }}</textarea>
+            </div>
+        </div>
+        
+        <div class="questions-container">
+            {% for question in questions %}
+                <div class="card question-card" data-question="{{ forloop.counter }}">
+                    <div class="question-header">
+                        <span class="question-number">{{ forloop.counter }}.</span>
+                        {% if question.required %}
+                            <span class="required-badge">Required</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="question-text">{{ question.text }}</h3>
+                    
+                    <div class="form-group">
+                        {% if question.question_type == 'text' %}
+                            <input type="text" 
+                                   name="question_{{ question.id }}" 
+                                   id="question_{{ question.id }}" 
+                                   class="form-control" 
+                                   placeholder="Enter your answer"
+                                   {% if question.required %}required{% endif %}
+                                   data-sub-clan-id="{{ sub_clan.id }}">
+                        {% elif question.question_type == 'textarea' %}
+                            <textarea name="question_{{ question.id }}" 
+                                      id="question_{{ question.id }}" 
+                                      class="form-control" 
+                                      rows="4" 
+                                      placeholder="Enter your answer"
+                                      {% if question.required %}required{% endif %}
+                                      data-sub-clan-id="{{ sub_clan.id }}"></textarea>
+                        {% elif question.question_type == 'radio' %}
+                            {% for option in question.options.options %}
+                                <div class="radio-option">
+                                    <input type="radio" 
+                                           name="question_{{ question.id }}" 
+                                           id="radio_{{ question.id }}_{{ forloop.counter }}" 
+                                           value="{{ option }}"
+                                           {% if question.required %}required{% endif %}
+                                           data-sub-clan-id="{{ sub_clan.id }}">
+                                    <label for="radio_{{ question.id }}_{{ forloop.counter }}">{{ option }}</label>
+                                </div>
+                            {% endfor %}
+                        {% elif question.question_type == 'checkbox' %}
+                            {% for option in question.options.options %}
+                                <div class="checkbox-option">
+                                    <input type="checkbox" 
+                                           name="question_{{ question.id }}" 
+                                           id="checkbox_{{ question.id }}_{{ forloop.counter }}" 
+                                           value="{{ option }}"
+                                           data-sub-clan-id="{{ sub_clan.id }}">
+                                    <label for="checkbox_{{ question.id }}_{{ forloop.counter }}">{{ option }}</label>
+                                </div>
+                            {% endfor %}
+                        {% elif question.question_type == 'select' %}
+                            <select name="question_{{ question.id }}" 
+                                    id="question_{{ question.id }}" 
+                                    class="form-control"
+                                    {% if question.required %}required{% endif %}
+                                    data-sub-clan-id="{{ sub_clan.id }}">
+                                <option value="">Choose an option...</option>
+                                {% for option in question.options.options %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        {% elif question.question_type == 'number' %}
+                            <input type="number" 
+                                   name="question_{{ question.id }}" 
+                                   id="question_{{ question.id }}" 
+                                   class="form-control" 
+                                   placeholder="Enter a number"
+                                   {% if question.required %}required{% endif %}
+                                   data-sub-clan-id="{{ sub_clan.id }}">
+                        {% elif question.question_type == 'email' %}
+                            <input type="email" 
+                                   name="question_{{ question.id }}" 
+                                   id="question_{{ question.id }}" 
+                                   class="form-control" 
+                                   placeholder="Enter email address"
+                                   {% if question.required %}required{% endif %}
+                                   data-sub-clan-id="{{ sub_clan.id }}">
+                        {% elif question.question_type == 'date' %}
+                            <input type="date" 
+                                   name="question_{{ question.id }}" 
+                                   id="question_{{ question.id }}" 
+                                   class="form-control"
+                                   {% if question.required %}required{% endif %}
+                                   data-sub-clan-id="{{ sub_clan.id }}">
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-send me-1"></i>Submit Survey
+            </button>
+            <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+            </a>
+        </div>
+    </form>
+{% endif %}
+
+<style>
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-track {
+    flex: 1;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    margin-left: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    transition: width 0.3s ease;
+}
+
+.question-card {
+    border-left: 4px solid #007bff;
+}
+
+.question-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.question-number {
+    background: #007bff;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.required-badge {
+    background: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.question-text {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.radio-option, .checkbox-option {
+    margin-bottom: 10px;
+}
+
+.radio-option input, .checkbox-option input {
+    margin-right: 8px;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.form-actions .btn {
+    margin: 0 10px;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questions = document.querySelectorAll('.question-card');
+    const progressFill = document.querySelector('.progress-fill');
+    const currentQuestionSpan = document.getElementById('current-question');
+    const totalQuestions = questions.length;
+    
+    function updateProgress() {
+        const currentQuestion = Math.min(questions.length, Math.max(1, questions.length));
+        const progress = (currentQuestion / totalQuestions) * 100;
+        progressFill.style.width = progress + '%';
+        currentQuestionSpan.textContent = currentQuestion;
+    }
+    
+    // Initialize progress
+    updateProgress();
+    
+    // Add form submission validation
+    const form = document.getElementById('survey-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('error');
+                } else {
+                    field.classList.remove('error');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+            }
+        });
+    }
+    
+    // Add input field styling
+    const inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.classList.remove('focused');
+        });
+    });
+});
+</script>
+{% endblock %}

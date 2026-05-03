@@ -1,0 +1,344 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Admin Dashboard - OBB Baseline Survey System{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-card p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.chart-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.chart-container h3 {
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.simple-chart {
+    display: flex;
+    align-items: flex-end;
+    height: 200px;
+    gap: 0.5rem;
+}
+
+.chart-bar {
+    flex: 1;
+    background: linear-gradient(to top, #667eea, #764ba2);
+    border-radius: 4px 4px 0 0;
+    min-height: 10px;
+    position: relative;
+}
+
+.chart-bar:hover {
+    opacity: 0.8;
+}
+
+.chart-bar-label {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: #718096;
+}
+
+.chart-bar-value {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: #2d3748;
+}
+
+.recent-items {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recent-items h3 {
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.recent-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-item:last-child {
+    border-bottom: none;
+}
+
+.recent-item-title {
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.recent-item-meta {
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.survey-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.survey-stats-table th,
+.survey-stats-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.survey-stats-table th {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.survey-stats-table tr:hover {
+    background: #f7fafc;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .quick-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Manage surveys and view analytics</p>
+</div>
+
+<div class="quick-actions">
+    <a href="{% url 'admin_dash:surveys' %}" class="btn btn-primary">Manage Surveys</a>
+    <a href="{% url 'admin_dash:responses' %}" class="btn btn-primary">View Responses</a>
+    <a href="/admin/" class="btn btn-secondary">Django Admin</a>
+    {% if user.is_superuser %}
+        <a href="{% url 'admin_dash:super_admin_dashboard' %}" class="btn btn-secondary">Super Admin</a>
+    {% endif %}
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <h3>{{ total_surveys }}</h3>
+        <p>Total Surveys</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ active_surveys }}</h3>
+        <p>Active Surveys</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ total_responses }}</h3>
+        <p>Total Responses</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ total_users }}</h3>
+        <p>Total Users</p>
+    </div>
+    {% if clan_models_available %}
+    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <h3>{{ total_clans }}</h3>
+        <p>Total Clans</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <h3>{{ admin_clans }}</h3>
+        <p>My Clans</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+        <h3>{{ total_sub_clans }}</h3>
+        <p>Sub-Clans</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+        <h3>{{ total_ridges }}</h3>
+        <p>Ridges</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="chart-container">
+    <h3>Response Trends (Last 7 Days)</h3>
+    <div class="simple-chart">
+        {% for data in daily_responses %}
+            <div class="chart-bar" data-height="{{ data.height }}">
+                <div class="chart-bar-value">{{ data.count }}</div>
+                <div class="chart-bar-label">{{ data.date }}</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div class="recent-items">
+        <h3>Recent Surveys</h3>
+        {% for survey in recent_surveys %}
+            <div class="recent-item">
+                <div class="recent-item-title">{{ survey.title }}</div>
+                <div class="recent-item-meta">
+                    Created: {{ survey.created_at|date:"M d, Y" }} | 
+                    Status: {% if survey.is_active %}Active{% else %}Inactive{% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="recent-item">
+                <div class="recent-item-title">No surveys yet</div>
+                <div class="recent-item-meta">Create your first survey to get started</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="recent-items">
+        <h3>Recent Responses</h3>
+        {% for response in recent_responses %}
+            <div class="recent-item">
+                <div class="recent-item-title">{{ response.survey.title }}</div>
+                <div class="recent-item-meta">
+                    {% if response.user %}
+                        By: {{ response.user.username }}
+                    {% else %}
+                        Anonymous
+                    {% endif %}
+                    | {{ response.submitted_at|date:"M d, Y g:i A" }}
+                </div>
+            </div>
+        {% empty %}
+            <div class="recent-item">
+                <div class="recent-item-title">No responses yet</div>
+                <div class="recent-item-meta">Responses will appear here once users complete surveys</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if clan_models_available and recent_clans %}
+<div class="chart-container">
+    <h3>Recent Clans</h3>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Clan Name</th>
+                    <th>Sub-Clans</th>
+                    <th>Ridges</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for clan in recent_clans %}
+                <tr>
+                    <td>
+                        <strong>{{ clan.name }}</strong>
+                        {% if clan.description %}
+                        <br><small class="text-muted">{{ clan.description|truncatechars:50 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-info">{{ clan.sub_clans_total }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-warning">{{ clan.ridges_total }}</span>
+                    </td>
+                    <td>{{ clan.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if survey_stats %}
+<div class="chart-container">
+    <h3>Top Performing Surveys</h3>
+    <table class="survey-stats-table">
+        <thead>
+            <tr>
+                <th>Survey Title</th>
+                <th>Responses</th>
+                <th>Questions</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for survey in survey_stats %}
+                <tr>
+                    <td>
+                        <a href="{% url 'surveys:survey_results' survey.id %}">{{ survey.title }}</a>
+                    </td>
+                    <td>{{ survey.response_count }}</td>
+                    <td>{{ survey.questions.count }}</td>
+                    <td>{{ survey.created_at|date:"M d, Y" }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set chart bar heights from data attributes
+    const chartBars = document.querySelectorAll('.chart-bar');
+    chartBars.forEach(bar => {
+        const height = bar.getAttribute('data-height');
+        if (height) {
+            bar.style.height = height + 'px';
+        }
+    });
+});
+</script>

@@ -1,0 +1,348 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Clans - OBB Baseline Survey System{% endblock %}
+
+{% block content %}
+<div class="custom-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-2">
+                <i class="bi bi-people text-gradient me-2"></i>Bwamba Kingdom Clans
+            </h1>
+            <p class="text-muted mb-0">View and manage clans for comprehensive baseline data collection</p>
+        </div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'surveys:create_survey' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Create Clan
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if surveys %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mt-2">
+        {% for survey in page_obj %}
+            <div class="col">
+                <div class="card h-100 shadow-sm {% if survey.is_clan %}border-warning{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ survey.title }}</h5>
+                            {% if survey.is_clan %}
+                                <span class="badge bg-warning">Bwamba Clan</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="card-text text-muted small">{{ survey.description|truncatewords:15 }}</p>
+                        
+                        <div class="mb-2">
+                            {% if survey.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-person-circle me-1"></i>Created by {{ survey.created_by.username }}
+                                <br>
+                                <i class="bi bi-calendar me-1"></i>{{ survey.created_at|date:"M d, Y" }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-clipboard-data me-1"></i>{{ survey.responses.count }} data collection{{ survey.responses.count|pluralize }}
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <!-- Primary action: View Clan Details -->
+                            <a href="{% url 'surveys:survey_detail' survey.id %}" class="btn btn-primary">
+                                <i class="bi bi-eye me-1"></i>View Clan Details
+                            </a>
+                            
+                            <!-- Actions for clan creator -->
+                            {% if user.is_authenticated and survey.created_by == user %}
+                                <a href="{% url 'surveys:edit_survey' survey.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i>Edit Clan
+                                </a>
+                                <a href="{% url 'surveys:take_survey' survey.id %}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-clipboard-data me-1"></i>Fill Clan Survey
+                                </a>
+                                <button class="btn btn-outline-info btn-sm sub-clan-btn" data-clan-id="{{ survey.id }}" data-clan-name="{{ survey.title|escapejs }}">
+                                    <i class="bi bi-diagram-3 me-1"></i>Create Sub-Clan
+                                </button>
+                            {% endif %}
+                            
+                            <!-- Actions for other surveyers -->
+                            {% if user.is_authenticated and survey.created_by != user %}
+                                <a href="{% url 'surveys:take_survey' survey.id %}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-clipboard-data me-1"></i>Collect Data
+                                </a>
+                            {% endif %}
+                            
+                            <!-- Results viewing -->
+                            {% if user.is_authenticated and survey.created_by == user or user.is_staff %}
+                                <a href="{% url 'surveys:survey_results' survey.id %}" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-bar-chart me-1"></i>View Data
+                                </a>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Sub-Clans Section -->
+                        {% for clan_data in clan_surveys_with_sub_clans %}
+                            {% if clan_data.survey.id == survey.id %}
+                                {% if clan_data.sub_clans %}
+                                    <div class="mt-3 pt-3 border-top">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="bi bi-diagram-3 me-1"></i>Sub-Clans ({{ clan_data.sub_clans|length }})
+                                        </h6>
+                                        <div class="row row-cols-1 g-2">
+                                            {% for sub_clan_data in clan_data.sub_clans %}
+                                                <div class="col">
+                                                    <div class="card card-sm border-info">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                                <h6 class="card-title mb-0 small">{{ sub_clan_data.sub_clan.name }}</h6>
+                                                                <span class="badge bg-info">Kanumbha</span>
+                                                            </div>
+                                                            
+                                                            <p class="card-text text-muted small mb-1">
+                                                                <i class="bi bi-geo-alt me-1"></i>{{ sub_clan_data.sub_clan.address|truncatewords:10 }}
+                                                            </p>
+                                                            
+                                                            <div class="mb-1">
+                                                                {% if sub_clan_data.sub_clan.is_active %}
+                                                                    <span class="badge bg-success">Active</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">Inactive</span>
+                                                                {% endif %}
+                                                            </div>
+                                                            
+                                                            <div class="mb-1">
+                                                                <small class="text-muted">
+                                                                    <i class="bi bi-person me-1"></i>{{ sub_clan_data.sub_clan.leader_name }}
+                                                                </small>
+                                                            </div>
+                                                            
+                                                            <!-- Ridges Dropdown -->
+                                                            <div class="dropdown mb-2">
+                                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100" type="button" id="ridgesDropdown{{ sub_clan_data.sub_clan.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                    <i class="bi bi-diagram-3 me-1"></i>
+                                                                    Ridges ({{ sub_clan_data.sub_clan.ridges.count }})
+                                                                </button>
+                                                                <ul class="dropdown-menu w-100" aria-labelledby="ridgesDropdown{{ sub_clan_data.sub_clan.id }}">
+                                                                    {% for ridge in sub_clan_data.sub_clan.ridges.all %}
+                                                                        <li>
+                                                                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'surveys:ridge_obb_survey' ridge.id %}">
+                                                                                <div>
+                                                                                    <strong>{{ ridge.name }}</strong>
+                                                                                    <br>
+                                                                                    <small class="text-muted">
+                                                                                        <i class="bi bi-person me-1"></i>{{ ridge.leader_name }}
+                                                                                        {% if ridge.leader_contact %}| {{ ridge.leader_contact }}{% endif %}
+                                                                                    </small>
+                                                                                </div>
+                                                                                <div class="btn-group btn-group-sm">
+                                                                                    <a href="{% url 'surveys:ridge_obb_survey' ridge.id %}" class="btn btn-primary btn-sm" title="OBB Survey">
+                                                                                        <i class="bi bi-file-earmark-text"></i>
+                                                                                    </a>
+                                                                                    <a href="{% url 'surveys:take_ridge_survey' ridge.id %}" class="btn btn-success btn-sm" title="Quick Survey">
+                                                                                        <i class="bi bi-clipboard-data"></i>
+                                                                                    </a>
+                                                                                </div>
+                                                                            </a>
+                                                                        </li>
+                                                                    {% empty %}
+                                                                        <li><a class="dropdown-item text-muted" href="#">No ridges created yet</a></li>
+                                                                        <li><hr class="dropdown-divider"></li>
+                                                                        <li>
+                                                                            <a class="dropdown-item text-primary" href="{% url 'surveys:create_ridge' sub_clan_data.sub_clan.id %}">
+                                                                                <i class="bi bi-plus-circle me-1"></i>Create First Ridge
+                                                                            </a>
+                                                                        </li>
+                                                                    {% endfor %}
+                                                                    {% if sub_clan_data.sub_clan.ridges.count > 0 %}
+                                                                        <li><hr class="dropdown-divider"></li>
+                                                                        <li>
+                                                                            <a class="dropdown-item text-primary" href="{% url 'surveys:create_ridge' sub_clan_data.sub_clan.id %}">
+                                                                                <i class="bi bi-plus-circle me-1"></i>Add New Ridge
+                                                                            </a>
+                                                                        </li>
+                                                                    {% endif %}
+                                                                </ul>
+                                                            </div>
+                                                            
+                                                            <div class="d-grid gap-1">
+                                                                <!-- Sub-Clan Survey Actions -->
+                                                                <a href="{% url 'surveys:sub_clan_obb_survey' sub_clan_data.sub_clan.id %}" class="btn btn-primary btn-sm">
+                                                                    <i class="bi bi-file-earmark-text me-1"></i>OBB Survey
+                                                                </a>
+                                                                <a href="{% url 'surveys:take_sub_clan_survey' sub_clan_data.sub_clan.id %}" class="btn btn-success btn-sm">
+                                                                    <i class="bi bi-clipboard-data me-1"></i>Quick Survey
+                                                                </a>
+                                                                <a href="{% url 'surveys:create_ridge' sub_clan_data.sub_clan.id %}" class="btn btn-info btn-sm">
+                                                                    <i class="bi bi-diagram-3 me-1"></i>Create Ridge
+                                                                </a>
+                                                                
+                                                                <!-- Create Sub-Clan Survey (for clan creator) -->
+                                                                {% if user.is_authenticated and survey.created_by == user %}
+                                                                    <a href="{% url 'surveys:create_sub_clan_survey' sub_clan_data.sub_clan.id %}" class="btn btn-outline-primary btn-sm">
+                                                                        <i class="bi bi-plus-circle me-1"></i>Create Survey
+                                                                    </a>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Clan pagination">
+        <ul class="pagination justify-content-center mt-4">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-people display-1 text-muted"></i>
+        <h3 class="mt-3 text-muted">No clans available yet</h3>
+        <p class="text-muted">Create your first clan to start collecting baseline data for the Bwamba Kingdom.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'surveys:create_survey' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Create Clan
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Sub-Clan Creation Modal -->
+<div class="modal fade" id="subClanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Sub-Clan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="subClanForm">
+                    <input type="hidden" id="parentClanId" name="parent_clan_id">
+                    <div class="mb-3">
+                        <label class="form-label">Parent Clan</label>
+                        <input type="text" class="form-control" id="parentClanName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sub-Clan Name *</label>
+                        <input type="text" class="form-control" name="sub_clan_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="sub_clan_description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createSubClan()">Create Sub-Clan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for sub-clan buttons
+    document.querySelectorAll('.sub-clan-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const clanId = this.getAttribute('data-clan-id');
+            const clanName = this.getAttribute('data-clan-name');
+            
+            document.getElementById('parentClanId').value = clanId;
+            document.getElementById('parentClanName').value = clanName;
+            document.getElementById('subClanForm').reset();
+            document.getElementById('parentClanName').value = clanName; // Reset keeps this value
+            
+            const modal = new bootstrap.Modal(document.getElementById('subClanModal'));
+            modal.show();
+        });
+    });
+});
+
+function createSubClan() {
+    const form = document.getElementById('subClanForm');
+    const formData = new FormData(form);
+    
+    fetch('/surveys/create-sub-clan/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('subClanModal')).hide();
+            location.reload();
+        } else {
+            alert('Error creating sub-clan: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating sub-clan');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

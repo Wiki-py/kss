@@ -1,0 +1,458 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Super Admin Dashboard - OBB Baseline Survey System{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #f56565 0%, #ed8936 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.super-admin {
+    background: linear-gradient(135deg, #9f7aea 0%, #667eea 100%);
+}
+
+.stat-card h3 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-card p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.875rem;
+}
+
+.chart-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.chart-container h3 {
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.progress-bar-container {
+    background: #e2e8f0;
+    border-radius: 4px;
+    height: 24px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar-fill {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.distribution-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.distribution-item {
+    text-align: center;
+}
+
+.distribution-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.distribution-label {
+    color: #718096;
+    font-size: 0.875rem;
+}
+
+.question-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.question-type-item {
+    background: #f7fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #667eea;
+}
+
+.question-type-count {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.question-type-name {
+    color: #718096;
+    font-size: 0.875rem;
+    text-transform: capitalize;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .distribution-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .quick-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Super Admin Dashboard</h1>
+    <p>System overview and administrative controls</p>
+</div>
+
+<div class="quick-actions">
+    <a href="{% url 'admin_dash:dashboard' %}" class="btn btn-primary">Admin Dashboard</a>
+    <a href="{% url 'admin_dash:surveys' %}" class="btn btn-primary">Manage Surveys</a>
+    <a href="{% url 'admin_dash:responses' %}" class="btn btn-primary">View Responses</a>
+    <a href="{% url 'admin_dash:users' %}" class="btn btn-primary">Manage Users</a>
+    <a href="/admin/" class="btn btn-secondary">Django Admin</a>
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <h3>{{ total_surveys }}</h3>
+        <p>Total Surveys</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ active_surveys }}</h3>
+        <p>Active Surveys</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ total_responses }}</h3>
+        <p>Total Responses</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ total_users }}</h3>
+        <p>Total Users</p>
+    </div>
+    <div class="stat-card super-admin">
+        <h3>{{ admin_users }}</h3>
+        <p>Admin Users</p>
+    </div>
+    <div class="stat-card super-admin">
+        <h3>{{ super_admin_users }}</h3>
+        <p>Super Admin Users</p>
+    </div>
+    {% if clan_models_available %}
+    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <h3>{{ total_clans }}</h3>
+        <p>Total Clans</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <h3>{{ total_sub_clans }}</h3>
+        <p>Sub-Clans</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <h3>{{ total_ridges }}</h3>
+        <p>Ridges</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+        <h3>{{ total_committee_members }}</h3>
+        <p>Committee Members</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+        <h3>{{ total_structures }}</h3>
+        <p>Structures</p>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+        <h3>{{ total_resources }}</h3>
+        <p>Resources</p>
+    </div>
+    {% endif %}
+    <div class="stat-card">
+        <h3>{{ active_users_7days }}</h3>
+        <p>Active (7 days)</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ authenticated_responses }}</h3>
+        <p>Auth Responses</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <div class="chart-container">
+        <h3>Survey Completion Rates</h3>
+        {% for survey in survey_completion %}
+            <div style="margin-bottom: 1rem;">
+                <div class="progress-label">
+                    <span>{{ survey.title }}</span>
+                    <span>{{ survey.completion_rate|floatformat:1 }}%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" data-width="{{ survey.completion_rate }}"></div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No survey data available yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="chart-container">
+        <h3>Response Distribution</h3>
+        <div class="distribution-grid">
+            <div class="distribution-item">
+                <div class="distribution-value">{{ authenticated_responses }}</div>
+                <div class="distribution-label">Authenticated</div>
+            </div>
+            <div class="distribution-item">
+                <div class="distribution-value">{{ anonymous_responses }}</div>
+                <div class="distribution-label">Anonymous</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h3>Question Type Distribution</h3>
+    <div class="question-types-grid">
+        {% for qtype in question_types %}
+            <div class="question-type-item">
+                <div class="question-type-count">{{ qtype.count }}</div>
+                <div class="question-type-name">{{ qtype.question_type }}</div>
+            </div>
+        {% empty %}
+            <p>No questions created yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% if clan_models_available %}
+<!-- Clan System Analytics -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div class="chart-container">
+        <h3>Clan Distribution by District</h3>
+        {% if clan_distribution %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>District</th>
+                            <th>Clans</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for district in clan_distribution %}
+                        <tr>
+                            <td>{{ district.district|default:"Unknown" }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ district.count }}</span>
+                            </td>
+                            <td>
+                            {% if total_clans > 0 %}
+                                {% widthratio district.count total_clans 100 as percentage %}
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">{{ percentage|floatformat:1 }}%</div>
+                                </div>
+                            {% else %}
+                                <small>0%</small>
+                            {% endif %}
+                        </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No clan distribution data available yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="chart-container">
+        <h3>Top Clan Creators</h3>
+        {% if top_creators %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Clans Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for creator in top_creators %}
+                        <tr>
+                            <td>{{ creator.username }}</td>
+                            <td>
+                                <span class="badge bg-success">{{ creator.clan_count }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No clan creators data available yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="chart-container">
+    <h3>Clan Hierarchy Statistics</h3>
+    {% if clan_hierarchy_stats %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Clan Name</th>
+                        <th>Sub-Clans</th>
+                        <th>Ridges</th>
+                        <th>Structures</th>
+                        <th>District</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for clan in clan_hierarchy_stats %}
+                    <tr>
+                        <td>
+                            <strong>{{ clan.name }}</strong>
+                            {% if clan.description %}
+                            <br><small class="text-muted">{{ clan.description|truncatechars:30 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ clan.sub_clans_total }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">{{ clan.ridges_total }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">{{ clan.structures_total }}</span>
+                        </td>
+                        <td>{{ clan.district|default:"Unknown" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No clan hierarchy data available yet.</p>
+    {% endif %}
+</div>
+
+<div class="chart-container">
+    <h3>Recent Clans Created</h3>
+    {% if recent_clans %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Clan Name</th>
+                        <th>Creator</th>
+                        <th>District</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for clan in recent_clans %}
+                    <tr>
+                        <td>
+                            <strong>{{ clan.name }}</strong>
+                            {% if clan.village %}
+                            <br><small class="text-muted">{{ clan.village }}, {{ clan.parish }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ clan.created_by.username }}</td>
+                        <td>{{ clan.district|default:"Unknown" }}</td>
+                        <td>{{ clan.created_at|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No recent clans created yet.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="chart-container">
+    <h3>System Health</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div style="text-align: center; padding: 1rem; background: #f0fff4; border-radius: 8px;">
+            <div style="font-size: 1.5rem; color: #38a169;">✓</div>
+            <div style="color: #22543d; font-weight: 500;">Database</div>
+            <div style="color: #718096; font-size: 0.875rem;">Connected</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: #f0fff4; border-radius: 8px;">
+            <div style="font-size: 1.5rem; color: #38a169;">✓</div>
+            <div style="color: #22543d; font-weight: 500;">Authentication</div>
+            <div style="color: #718096; font-size: 0.875rem;">Working</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: #f0fff4; border-radius: 8px;">
+            <div style="font-size: 1.5rem; color: #38a169;">✓</div>
+            <div style="color: #22543d; font-weight: 500;">Surveys</div>
+            <div style="color: #718096; font-size: 0.875rem;">Active</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: #f0fff4; border-radius: 8px;">
+            <div style="font-size: 1.5rem; color: #38a169;">✓</div>
+            <div style="color: #22543d; font-weight: 500;">Responses</div>
+            <div style="color: #718096; font-size: 0.875rem;">Processing</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set progress bar widths from data attributes
+    const progressBars = document.querySelectorAll('.progress-bar-fill');
+    progressBars.forEach(bar => {
+        const width = bar.getAttribute('data-width');
+        if (width) {
+            bar.style.width = width + '%';
+        }
+    });
+});
+</script>

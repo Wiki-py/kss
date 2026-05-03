@@ -1,0 +1,594 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Ridge OBB Survey: {{ ridge.name }} - OBB Baseline Survey System{% endblock %}
+
+{% block extra_css %}
+<style>
+.obb-survey-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.section-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    padding: 15px 20px;
+    margin: 30px 0 20px 0;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.subsection-header {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    margin: 20px 0 15px 0;
+    border-left: 4px solid #17a2b8;
+    font-weight: 600;
+    color: #495057;
+}
+
+.dynamic-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.dynamic-table th,
+.dynamic-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: left;
+}
+
+.dynamic-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.dynamic-table input,
+.dynamic-table select,
+.dynamic-table textarea {
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.progress-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.progress-step.completed {
+    background: #28a745;
+    color: white;
+}
+
+.progress-step.active {
+    background: #17a2b8;
+    color: white;
+}
+
+.progress-step.pending {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.form-actions {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.photo-upload-area {
+    border: 2px dashed #ced4da;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    margin: 15px 0;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.photo-upload-area:hover {
+    border-color: #17a2b8;
+}
+
+.signature-area {
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    height: 150px;
+    margin: 15px 0;
+    background: white;
+}
+
+.add-row-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin: 5px 0;
+}
+
+.remove-row-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+
+.form-section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ridge-info {
+    background: #e8f5e8;
+    border: 1px solid #28a745;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .obb-survey-container {
+        padding: 10px;
+    }
+    
+    .dynamic-table {
+        font-size: 0.8rem;
+    }
+    
+    .progress-indicator {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="obb-survey-container">
+    <!-- Ridge Information Display -->
+    <div class="ridge-info">
+        <div class="row">
+            <div class="col-md-6">
+                <h4><i class="bi bi-geo-alt me-2"></i>{{ ridge.name }} Ridge</h4>
+                <p class="mb-1"><strong>Parent Sub-Clan:</strong> {{ ridge.sub_clan.name }}</p>
+                <p class="mb-1"><strong>Parent Clan:</strong> {{ ridge.sub_clan.clan.name }}</p>
+                <p class="mb-1"><strong>Leader:</strong> {{ ridge.leader_name }}</p>
+                <p class="mb-0"><strong>Contact:</strong> {{ ridge.leader_contact }}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-0"><strong>Survey Theme:</strong> Discovering the Unknown Strength and Building a Strong Kingdom</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+        <div class="progress-step completed" id="progress-basic">Basic</div>
+        <div class="progress-step active" id="progress-leadership">Leadership</div>
+        <div class="progress-step pending" id="progress-population">Population</div>
+        <div class="progress-step pending" id="progress-resources">Resources</div>
+        <div class="progress-step pending" id="progress-challenges">Challenges</div>
+        <div class="progress-step pending" id="progress-education">Education</div>
+        <div class="progress-step pending" id="progress-economic">Economic</div>
+        <div class="progress-step pending" id="progress-environment">Environment</div>
+        <div class="progress-step pending" id="progress-photos">Photos</div>
+        <div class="progress-step pending" id="progress-signatures">Signatures</div>
+    </div>
+
+    <form method="post" id="ridge-obb-survey-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="ridge_id" value="{{ ridge.id }}">
+        
+        <!-- SECTION A: SOCIAL ASPECT BASIC INFORMATION -->
+        
+        <!-- I. BASIC DETAILS -->
+        <div class="form-section" id="section-basic-details">
+            <div class="section-header">SECTION A: SOCIAL ASPECT BASIC INFORMATION</div>
+            <div class="subsection-header">I. BASIC DETAILS</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Name of the Ridge *</label>
+                        <input type="text" name="ridge_name" class="form-control" value="{{ ridge.name }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Number of Households</label>
+                        <input type="number" name="households_count" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Number of Families</label>
+                        <input type="number" name="families_count" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Physical Address / Headquarters *</label>
+                        <input type="text" name="physical_address" class="form-control" value="{{ ridge.sub_clan.address }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Village *</label>
+                        <input type="text" name="village" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Parish *</label>
+                        <input type="text" name="parish" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Sub-County *</label>
+                        <input type="text" name="sub_county" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">District *</label>
+                        <input type="text" name="district" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- II. EXECUTIVE COMMITTEE / LEADERSHIP -->
+        <div class="form-section" id="section-executive-committee">
+            <div class="subsection-header">II. EXECUTIVE COMMITTEE / LEADERSHIP</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="executive-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Sex (M/F)</th>
+                            <th>Position</th>
+                            <th>Education Level</th>
+                            <th>Phone Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="executive-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="exec_name_1" value="{{ ridge.leader_name }}"></td>
+                            <td>
+                                <select name="exec_sex_1">
+                                    <option value="">Select</option>
+                                    <option value="M">M</option>
+                                    <option value="F">F</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="exec_position_1" placeholder="Ridge Leader"></td>
+                            <td><input type="text" name="exec_education_1"></td>
+                            <td><input type="text" name="exec_phone_1" value="{{ ridge.leader_contact }}"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addExecutiveRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- III. STRUCTURES / OFFICES -->
+        <div class="form-section" id="section-structures">
+            <div class="subsection-header">III. STRUCTURES / OFFICES</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="structures-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Physical Address</th>
+                            <th>Structure Type</th>
+                            <th>Number of Staff</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="structures-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="struct_address_1" placeholder="{{ ridge.sub_clan.address }}"></td>
+                            <td>
+                                <select name="struct_type_1">
+                                    <option value="">Select</option>
+                                    <option value="Permanent">Permanent</option>
+                                    <option value="Semi-permanent">Semi-permanent</option>
+                                    <option value="Temporary">Temporary</option>
+                                </select>
+                            </td>
+                            <td><input type="number" name="struct_staff_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addStructureRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- IV. POPULATION & MEETING INFORMATION -->
+        <div class="form-section" id="section-population">
+            <div class="subsection-header">IV. POPULATION & MEETING INFORMATION</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">How often do you hold Executive Meetings?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Once a year" id="meeting1">
+                                <label for="meeting1">Once a year</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Twice a year" id="meeting2">
+                                <label for="meeting2">Twice a year</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Quarterly" id="meeting3">
+                                <label for="meeting3">Quarterly</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Monthly" id="meeting4">
+                                <label for="meeting4">Monthly</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Other" id="meeting5">
+                                <label for="meeting5">Other:</label>
+                                <input type="text" name="meeting_frequency_other" style="width: 100px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Total Households</label>
+                        <input type="number" name="total_households" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Total Population</label>
+                        <input type="number" name="total_population" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Male Population</label>
+                        <input type="number" name="male_population" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Female Population</label>
+                        <input type="number" name="female_population" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Youth Population (18–30 years)</label>
+                        <input type="number" name="youth_population" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <div>
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
+                <button type="button" class="btn btn-warning" onclick="resetForm()">🔄 Reset Form</button>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary btn-lg">📤 Submit Ridge Survey</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dynamic table row management
+let executiveRowCount = 1;
+let structureRowCount = 1;
+
+function addExecutiveRow() {
+    executiveRowCount++;
+    const tbody = document.getElementById('executive-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${executiveRowCount}</td>
+        <td><input type="text" name="exec_name_${executiveRowCount}"></td>
+        <td>
+            <select name="exec_sex_${executiveRowCount}">
+                <option value="">Select</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+            </select>
+        </td>
+        <td><input type="text" name="exec_position_${executiveRowCount}"></td>
+        <td><input type="text" name="exec_education_${executiveRowCount}"></td>
+        <td><input type="text" name="exec_phone_${executiveRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addStructureRow() {
+    structureRowCount++;
+    const tbody = document.getElementById('structures-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${structureRowCount}</td>
+        <td><input type="text" name="struct_address_${structureRowCount}"></td>
+        <td>
+            <select name="struct_type_${structureRowCount}">
+                <option value="">Select</option>
+                <option value="Permanent">Permanent</option>
+                <option value="Semi-permanent">Semi-permanent</option>
+                <option value="Temporary">Temporary</option>
+            </select>
+        </td>
+        <td><input type="number" name="struct_staff_${structureRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function removeRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+    updateRowNumbers();
+}
+
+function updateRowNumbers() {
+    // Update row numbers for all tables
+    const tables = ['executive-tbody', 'structures-tbody'];
+    tables.forEach(tableId => {
+        const tbody = document.getElementById(tableId);
+        const rows = tbody.getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].cells[0].textContent = i + 1;
+        }
+    });
+}
+
+// Form actions
+function saveDraft() {
+    // Save form data to localStorage
+    const formData = new FormData(document.getElementById('ridge-obb-survey-form'));
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    localStorage.setItem('ridgeObbSurveyDraft', JSON.stringify(data));
+    alert('Draft saved successfully!');
+}
+
+function resetForm() {
+    if (confirm('Are you sure you want to reset the entire form? All data will be lost.')) {
+        document.getElementById('ridge-obb-survey-form').reset();
+        localStorage.removeItem('ridgeObbSurveyDraft');
+    }
+}
+
+// Progress indicator update
+function updateProgress() {
+    const sections = document.querySelectorAll('.form-section');
+    const progressSteps = document.querySelectorAll('.progress-step');
+    
+    sections.forEach((section, index) => {
+        const inputs = section.querySelectorAll('input, select, textarea');
+        let hasData = false;
+        
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                if (input.checked) hasData = true;
+            } else if (input.value.trim() !== '') {
+                hasData = true;
+            }
+        });
+        
+        if (hasData) {
+            progressSteps[index].classList.remove('pending');
+            progressSteps[index].classList.add('completed');
+        }
+    });
+}
+
+// Auto-save draft every 30 seconds
+setInterval(saveDraft, 30000);
+
+// Load draft on page load
+window.addEventListener('load', function() {
+    const draft = localStorage.getItem('ridgeObbSurveyDraft');
+    if (draft) {
+        const data = JSON.parse(draft);
+        const form = document.getElementById('ridge-obb-survey-form');
+        
+        Object.keys(data).forEach(key => {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = data[key] === 'on';
+                } else {
+                    input.value = data[key];
+                }
+            }
+        });
+    }
+});
+
+// Update progress on input changes
+document.addEventListener('input', updateProgress);
+document.addEventListener('change', updateProgress);
+</script>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Create Sub-Clan - OBB Baseline Survey System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'surveys/css/concurrent_access.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'surveys/js/concurrent_access.js' %}"></script>
+<script>
+// Configuration for concurrent access
+window.concurrentConfig = {
+    lockType: 'sub_clan_create',
+    objectId: parseInt('{{ clan.id }}'),
+    sessionType: 'sub_clan_create',
+    refreshInterval: 30000
+};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="bi bi-diagram-3 text-gradient me-2"></i>Create Sub-Clan (Kanumbha)
+                    </h1>
+                    <p class="text-muted mb-0">Add a new sub-clan under {{ clan.name }} in the Bwamba Kingdom.</p>
+                </div>
+                <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Clans
+                </a>
+            </div>
+
+            <form method="post" action="{% url 'surveys:create_sub_clan' %}">
+                {% csrf_token %}
+                <input type="hidden" name="clan_id" value="{{ clan.id }}">
+                
+                <!-- Basic Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-info-circle text-gradient me-2"></i>Basic Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="bi bi-diagram-3 me-1"></i>Sub-Clan Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="name" id="name" class="form-control" 
+                                       placeholder="Enter the name of the sub-clan (Kanumbha)" required>
+                                <small class="text-muted">Choose a meaningful name that represents this sub-clan within {{ clan.name }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>Address <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="address" id="address" class="form-control" rows="3" 
+                                  placeholder="Enter the address of the sub-clan" required></textarea>
+                        <small class="text-muted">Provide the physical location of this sub-clan</small>
+                    </div>
+                </div>
+
+                <!-- Leadership Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-person-badge text-gradient me-2"></i>Leadership Information
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="leader_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Sub-Clan Leader Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="leader_name" id="leader_name" class="form-control" 
+                                       placeholder="Enter the name of the sub-clan leader" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="leader_contact" class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Contact Number
+                                </label>
+                                <input type="text" name="leader_contact" id="leader_contact" class="form-control" 
+                                       placeholder="Enter contact number (optional)">
+                                <small class="text-muted">Provide a phone number for the sub-clan leader</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-gear text-gradient me-2"></i>Sub-Clan Settings
+                    </h5>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" id="is_active" 
+                               class="form-check-input" checked>
+                        <label for="is_active" class="form-check-label">
+                            <i class="bi bi-check-circle me-1"></i>Activate sub-clan immediately
+                        </label>
+                        <small class="text-muted d-block">Uncheck this if you want to activate the sub-clan later</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-1"></i>Create Sub-Clan
+                    </button>
+                    <a href="{% url 'surveys:survey_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="custom-card p-4 mt-4">
+            <h5 class="mb-3">
+                <i class="bi bi-lightbulb me-2"></i>About Sub-Clans (Kanumbha)
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-info-circle text-info me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">What is a Kanumbha?</h6>
+                            <small class="text-muted">A Kanumbha is a sub-clan within the main clan structure of the Bwamba Kingdom</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-people text-success me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Leadership Structure</h6>
+                            <small class="text-muted">Each Kanumbha has its own leader who reports to the main clan head</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-geo-alt text-warning me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Geographic Organization</h6>
+                            <small class="text-muted">Kanumbhas are organized by geographic areas within the clan territory</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-diagram-3 text-primary me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Hierarchy</h6>
+                            <small class="text-muted">Kanumbhas can contain multiple ridges (Bitubhi) for further organization</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Users Panel -->
+<div id="active-users" class="active-users-panel" style="display: none;">
+    <div class="active-users-header">
+        <span class="active-users-count">0 users active</span>
+    </div>
+    <div class="active-users-list">
+        <!-- Active users will be populated here -->
+    </div>
+</div>
+
+<!-- Collaboration Notifications Container -->
+<div id="collaboration-notifications"></div>
+
+{% endblock %}

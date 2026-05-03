@@ -1,0 +1,1753 @@
+{% extends "surveys/base.html" %}
+
+{% block title %}Sub-Clan OBB Survey: {{ sub_clan.name }} - OBB Baseline Survey System{% endblock %}
+
+{% block extra_css %}
+<style>
+.obb-survey-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.section-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    margin: 30px 0 20px 0;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.subsection-header {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    margin: 20px 0 15px 0;
+    border-left: 4px solid #007bff;
+    font-weight: 600;
+    color: #495057;
+}
+
+.dynamic-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.dynamic-table th,
+.dynamic-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: left;
+}
+
+.dynamic-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.dynamic-table input,
+.dynamic-table select,
+.dynamic-table textarea {
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.progress-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.progress-step.completed {
+    background: #28a745;
+    color: white;
+}
+
+.progress-step.active {
+    background: #007bff;
+    color: white;
+}
+
+.progress-step.pending {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.form-actions {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.photo-upload-area {
+    border: 2px dashed #ced4da;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    margin: 15px 0;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.photo-upload-area:hover {
+    border-color: #007bff;
+}
+
+.signature-area {
+    border: 2px solid #ced4da;
+    border-radius: 8px;
+    height: 150px;
+    margin: 15px 0;
+    background: white;
+}
+
+.add-row-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin: 5px 0;
+}
+
+.remove-row-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+
+.form-section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sub-clan-info {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.ridge-card {
+    border-left: 4px solid #17a2b8;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ridge-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.ridge-info {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.ridge-cards-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .obb-survey-container {
+        padding: 10px;
+    }
+    
+    .dynamic-table {
+        font-size: 0.8rem;
+    }
+    
+    .progress-indicator {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="obb-survey-container">
+    <!-- Sub-Clan Information Display -->
+    <div class="sub-clan-info">
+        <div class="row">
+            <div class="col-md-6">
+                <h4><i class="bi bi-diagram-3 me-2"></i>{{ sub_clan.name }} Sub-Clan</h4>
+                <p class="mb-1"><strong>Parent Clan:</strong> {{ sub_clan.clan.name }}</p>
+                <p class="mb-1"><strong>Leader:</strong> {{ sub_clan.leader_name }}</p>
+                <p class="mb-0"><strong>Contact:</strong> {{ sub_clan.leader_contact }}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Address:</strong> {{ sub_clan.address }}</p>
+                <p class="mb-0"><strong>Survey Theme:</strong> Discovering the Unknown Strength and Building a Strong Kingdom</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ridge Cards Section -->
+    <div class="ridge-cards-section">
+        <h5 class="mb-3"><i class="bi bi-diagram-3-fill me-2"></i>Ridges (Bitubhi) in {{ sub_clan.name }}</h5>
+        <div class="row">
+            {% for ridge in sub_clan.ridges.all %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card ridge-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-1">
+                                    <i class="bi bi-geo-alt text-primary me-1"></i>{{ ridge.name }}
+                                </h6>
+                                <span class="badge bg-info">Ridge</span>
+                            </div>
+                            
+                            <div class="ridge-info">
+                                <p class="mb-1"><small><strong>Leader:</strong> {{ ridge.leader_name }}</small></p>
+                                <p class="mb-1"><small><strong>Contact:</strong> {{ ridge.leader_contact }}</small></p>
+                            </div>
+                            
+                            <div class="d-grid gap-1 mt-2">
+                                <!-- Ridge Survey Actions -->
+                                <a href="{% url 'surveys:ridge_obb_survey' ridge.id %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-file-earmark-text me-1"></i>OBB Survey
+                                </a>
+                                <a href="{% url 'surveys:take_ridge_survey' ridge.id %}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-clipboard-data me-1"></i>Quick Survey
+                                </a>
+                                
+                                <!-- Create Ridge Survey -->
+                                <a href="{% url 'surveys:create_ridge_survey' ridge.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>Create Survey
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No ridges have been created for this sub-clan yet.
+                        <a href="{% url 'surveys:create_ridge' sub_clan.id %}" class="btn btn-sm btn-primary ms-2">
+                            <i class="bi bi-plus-circle me-1"></i>Create First Ridge
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Add New Ridge Button -->
+        <div class="text-center mt-3">
+            <a href="{% url 'surveys:create_ridge' sub_clan.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add New Ridge
+            </a>
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+        <div class="progress-step completed" id="progress-basic">Basic</div>
+        <div class="progress-step active" id="progress-leadership">Leadership</div>
+        <div class="progress-step pending" id="progress-population">Population</div>
+        <div class="progress-step pending" id="progress-resources">Resources</div>
+        <div class="progress-step pending" id="progress-challenges">Challenges</div>
+        <div class="progress-step pending" id="progress-education">Education</div>
+        <div class="progress-step pending" id="progress-economic">Economic</div>
+        <div class="progress-step pending" id="progress-environment">Environment</div>
+        <div class="progress-step pending" id="progress-photos">Photos</div>
+        <div class="progress-step pending" id="progress-signatures">Signatures</div>
+    </div>
+
+    <form method="post" id="sub-clan-obb-survey-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="sub_clan_id" value="{{ sub_clan.id }}">
+        
+        <!-- SECTION A: SOCIAL ASPECT BASIC INFORMATION -->
+        
+        <!-- I. BASIC DETAILS -->
+        <div class="form-section" id="section-basic-details">
+            <div class="section-header">SECTION A: SOCIAL ASPECT BASIC INFORMATION</div>
+            <div class="subsection-header">I. BASIC DETAILS</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Name of the Sub-Clan *</label>
+                        <input type="text" name="sub_clan_name" class="form-control" value="{{ sub_clan.name }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Number of Households</label>
+                        <input type="number" name="households_count" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Number of Bitubhi (Ridges)</label>
+                        <input type="number" name="ridges_count" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Physical Address / Headquarters *</label>
+                        <input type="text" name="physical_address" class="form-control" value="{{ sub_clan.address }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Village *</label>
+                        <input type="text" name="village" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Parish *</label>
+                        <input type="text" name="parish" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Sub-County *</label>
+                        <input type="text" name="sub_county" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">District *</label>
+                        <input type="text" name="district" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- II. EXECUTIVE COMMITTEE / LEADERSHIP -->
+        <div class="form-section" id="section-executive-committee">
+            <div class="subsection-header">II. EXECUTIVE COMMITTEE / LEADERSHIP</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="executive-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Sex (M/F)</th>
+                            <th>Position</th>
+                            <th>Education Level</th>
+                            <th>Phone Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="executive-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="exec_name_1" value="{{ sub_clan.leader_name }}"></td>
+                            <td>
+                                <select name="exec_sex_1">
+                                    <option value="">Select</option>
+                                    <option value="M">M</option>
+                                    <option value="F">F</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="exec_position_1" placeholder="Sub-Clan Leader"></td>
+                            <td><input type="text" name="exec_education_1"></td>
+                            <td><input type="text" name="exec_phone_1" value="{{ sub_clan.leader_contact }}"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addExecutiveRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- III. STRUCTURES / OFFICES -->
+        <div class="form-section" id="section-structures">
+            <div class="subsection-header">III. STRUCTURES / OFFICES</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="structures-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Physical Address</th>
+                            <th>Structure Type</th>
+                            <th>Number of Staff</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="structures-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="struct_address_1" placeholder="{{ sub_clan.address }}"></td>
+                            <td>
+                                <select name="struct_type_1">
+                                    <option value="">Select</option>
+                                    <option value="Permanent">Permanent</option>
+                                    <option value="Semi-permanent">Semi-permanent</option>
+                                    <option value="Temporary">Temporary</option>
+                                </select>
+                            </td>
+                            <td><input type="number" name="struct_staff_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addStructureRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- IV. POPULATION & MEETING INFORMATION -->
+        <div class="form-section" id="section-population">
+            <div class="subsection-header">IV. POPULATION & MEETING INFORMATION</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">How often do you hold Executive Meetings?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Once a year" id="meeting1">
+                                <label for="meeting1">Once a year</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Twice a year" id="meeting2">
+                                <label for="meeting2">Twice a year</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Quarterly" id="meeting3">
+                                <label for="meeting3">Quarterly</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Monthly" id="meeting4">
+                                <label for="meeting4">Monthly</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="meeting_frequency" value="Other" id="meeting5">
+                                <label for="meeting5">Other:</label>
+                                <input type="text" name="meeting_frequency_other" style="width: 100px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Total Households</label>
+                        <input type="number" name="total_households" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Total Population</label>
+                        <input type="number" name="total_population" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Male Population</label>
+                        <input type="number" name="male_population" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Female Population</label>
+                        <input type="number" name="female_population" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Youth Population (18–30 years)</label>
+                        <input type="number" name="youth_population" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- V. RESOURCES OWNED OR RENTED -->
+        <div class="form-section" id="section-resources">
+            <div class="subsection-header">V. RESOURCES OWNED OR RENTED</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="resources-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Item</th>
+                            <th>Size/Capacity</th>
+                            <th>Estimated Value</th>
+                            <th>Owned</th>
+                            <th>Rented</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resources-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="resource_item_1" placeholder="Land"></td>
+                            <td><input type="text" name="resource_size_1"></td>
+                            <td><input type="text" name="resource_value_1"></td>
+                            <td><input type="checkbox" name="resource_owned_1"></td>
+                            <td><input type="checkbox" name="resource_rented_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><input type="text" name="resource_item_2" placeholder="Office space/building"></td>
+                            <td><input type="text" name="resource_size_2"></td>
+                            <td><input type="text" name="resource_value_2"></td>
+                            <td><input type="checkbox" name="resource_owned_2"></td>
+                            <td><input type="checkbox" name="resource_rented_2"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><input type="text" name="resource_item_3" placeholder="Equipment (kisoolo, cars, motorcycles, etc.)"></td>
+                            <td><input type="text" name="resource_size_3"></td>
+                            <td><input type="text" name="resource_value_3"></td>
+                            <td><input type="checkbox" name="resource_owned_3"></td>
+                            <td><input type="checkbox" name="resource_rented_3"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><input type="text" name="resource_item_4" placeholder="Other"></td>
+                            <td><input type="text" name="resource_size_4"></td>
+                            <td><input type="text" name="resource_value_4"></td>
+                            <td><input type="checkbox" name="resource_owned_4"></td>
+                            <td><input type="checkbox" name="resource_rented_4"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addResourceRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- VI. MAIN CHALLENGES -->
+        <div class="form-section" id="section-challenges">
+            <div class="subsection-header">VI. MAIN CHALLENGES (Select all that apply)</div>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_1" id="challenge1">
+                    <label for="challenge1">Governance / poor leadership / greed</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_2" id="challenge2">
+                    <label for="challenge2">Low member loyalty or commitment</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_3" id="challenge3">
+                    <label for="challenge3">Lack of financing of operations</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_4" id="challenge4">
+                    <label for="challenge4">Witchcraft</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_5" id="challenge5">
+                    <label for="challenge5">Alcoholism</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_6" id="challenge6">
+                    <label for="challenge6">Lack of exposure and information access</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_7" id="challenge7">
+                    <label for="challenge7">Disunity</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_8" id="challenge8">
+                    <label for="challenge8">Political camps</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="challenge_9" id="challenge9">
+                    <label for="challenge9">Other:</label>
+                    <input type="text" name="challenge_other">
+                </div>
+            </div>
+        </div>
+
+        <!-- VII. EDUCATION ESTIMATES -->
+        <div class="form-section" id="section-education-estimates">
+            <div class="subsection-header">VII. EDUCATION ESTIMATES</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="education-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Education Level</th>
+                            <th>Population (%)</th>
+                            <th>Area of Employment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="education-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td>Non</td>
+                            <td><input type="number" name="edu_pop_1" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>P.7</td>
+                            <td><input type="number" name="edu_pop_2" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_2"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>S.4</td>
+                            <td><input type="number" name="edu_pop_3" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_3"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>S.6</td>
+                            <td><input type="number" name="edu_pop_4" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_4"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Certificate</td>
+                            <td><input type="number" name="edu_pop_5" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_5"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Diploma</td>
+                            <td><input type="number" name="edu_pop_6" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_6"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>Degree</td>
+                            <td><input type="number" name="edu_pop_7" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_7"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>Masters</td>
+                            <td><input type="number" name="edu_pop_8" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_8"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>PhD</td>
+                            <td><input type="number" name="edu_pop_9" min="0" max="100"></td>
+                            <td><input type="text" name="edu_employment_9"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addEducationRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- VIII. EDUCATED PERSONS (Degree, Masters, PhD) -->
+        <div class="form-section" id="section-educated-persons">
+            <div class="subsection-header">VIII. EDUCATED PERSONS (Degree, Masters, PhD)</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="educated-persons-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Sex</th>
+                            <th>Age</th>
+                            <th>Education Level</th>
+                            <th>Area of Specialization</th>
+                            <th>Contact</th>
+                            <th>Location</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="educated-persons-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="educated_name_1"></td>
+                            <td>
+                                <select name="educated_sex_1">
+                                    <option value="">Select</option>
+                                    <option value="M">M</option>
+                                    <option value="F">F</option>
+                                </select>
+                            </td>
+                            <td><input type="number" name="educated_age_1"></td>
+                            <td>
+                                <select name="educated_level_1">
+                                    <option value="">Select</option>
+                                    <option value="Degree">Degree</option>
+                                    <option value="Masters">Masters</option>
+                                    <option value="PhD">PhD</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="educated_specialization_1"></td>
+                            <td><input type="text" name="educated_contact_1"></td>
+                            <td><input type="text" name="educated_location_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addEducatedPersonRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- IX. PERSONS LIVING ABROAD -->
+        <div class="form-section" id="section-persons-abroad">
+            <div class="subsection-header">IX. PERSONS LIVING ABROAD</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="persons-abroad-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Sex</th>
+                            <th>Age</th>
+                            <th>Contact/Email</th>
+                            <th>Country</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="persons-abroad-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="abroad_name_1"></td>
+                            <td>
+                                <select name="abroad_sex_1">
+                                    <option value="">Select</option>
+                                    <option value="M">M</option>
+                                    <option value="F">F</option>
+                                </select>
+                            </td>
+                            <td><input type="number" name="abroad_age_1"></td>
+                            <td><input type="text" name="abroad_contact_1"></td>
+                            <td><input type="text" name="abroad_country_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addPersonAbroadRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- X. POLITICAL LEADERS -->
+        <div class="form-section" id="section-political-leaders">
+            <div class="subsection-header">X. POLITICAL LEADERS</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="political-leaders-table">
+                    <thead>
+                        <tr>
+                            <th>Political Position</th>
+                            <th>Number of Persons</th>
+                            <th>Names</th>
+                            <th>Contacts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>L.C.I</td>
+                            <td><input type="number" name="pol_lci_count"></td>
+                            <td><input type="text" name="pol_lci_names"></td>
+                            <td><input type="text" name="pol_lci_contacts"></td>
+                        </tr>
+                        <tr>
+                            <td>L.C.II</td>
+                            <td><input type="number" name="pol_lcii_count"></td>
+                            <td><input type="text" name="pol_lcii_names"></td>
+                            <td><input type="text" name="pol_lcii_contacts"></td>
+                        </tr>
+                        <tr>
+                            <td>L.C.III</td>
+                            <td><input type="number" name="pol_lciii_count"></td>
+                            <td><input type="text" name="pol_lciii_names"></td>
+                            <td><input type="text" name="pol_lciii_contacts"></td>
+                        </tr>
+                        <tr>
+                            <td>District Councillors</td>
+                            <td><input type="number" name="pol_dc_count"></td>
+                            <td><input type="text" name="pol_dc_names"></td>
+                            <td><input type="text" name="pol_dc_contacts"></td>
+                        </tr>
+                        <tr>
+                            <td>L.C.V</td>
+                            <td><input type="number" name="pol_lcv_count"></td>
+                            <td><input type="text" name="pol_lcv_names"></td>
+                            <td><input type="text" name="pol_lcv_contacts"></td>
+                        </tr>
+                        <tr>
+                            <td>MP</td>
+                            <td><input type="number" name="pol_mp_count"></td>
+                            <td><input type="text" name="pol_mp_names"></td>
+                            <td><input type="text" name="pol_mp_contacts"></td>
+                        </tr>
+                        <tr>
+                            <td>Minister</td>
+                            <td><input type="number" name="pol_minister_count"></td>
+                            <td><input type="text" name="pol_minister_names"></td>
+                            <td><input type="text" name="pol_minister_contacts"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION B: ECONOMICAL ASPECT -->
+        
+        <!-- XI. SAVING GROUP INFORMATION -->
+        <div class="form-section" id="section-saving-group">
+            <div class="section-header">SECTION B: ECONOMICAL ASPECT</div>
+            <div class="subsection-header">XI. SAVING GROUP INFORMATION</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">1. Do you have a saving group?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="saving_group" value="Yes" id="saving_yes">
+                                <label for="saving_yes">Yes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="saving_group" value="No" id="saving_no">
+                                <label for="saving_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">2. If yes, name of saving group</label>
+                        <input type="text" name="saving_group_name" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">3. If no, give reasons</label>
+                        <input type="text" name="saving_group_no_reason" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">4. Year of formation</label>
+                        <input type="number" name="saving_group_year" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">5. Who initiated the group?</label>
+                        <select name="saving_group_initiator" class="form-control">
+                            <option value="">Select</option>
+                            <option value="Self-organized">Self-organized</option>
+                            <option value="Government">Government (specify)</option>
+                            <option value="Executive Committee">Executive Committee</option>
+                            <option value="Clan leaders">Clan leaders</option>
+                            <option value="NGO">NGO (specify)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Government/NGO specification</label>
+                        <input type="text" name="saving_group_initiator_spec" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">6. Is the group registered?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="saving_group_registered" value="Yes" id="registered_yes">
+                                <label for="registered_yes">Yes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="saving_group_registered" value="No" id="registered_no">
+                                <label for="registered_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">7a. Membership subscription fee?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="membership_fee" value="Yes" id="fee_yes">
+                                <label for="fee_yes">Yes (Amount: <input type="number" name="membership_fee_amount" style="width: 80px;">)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="membership_fee" value="No" id="fee_no">
+                                <label for="fee_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">7b. Shares required?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="shares_required" value="Yes" id="shares_yes">
+                                <label for="shares_yes">Yes (Amount: <input type="number" name="shares_amount" style="width: 80px;">)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="shares_required" value="No" id="shares_no">
+                                <label for="shares_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">7c. Annual subscription?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="annual_subscription" value="Yes" id="annual_yes">
+                                <label for="annual_yes">Yes (Amount: <input type="number" name="annual_amount" style="width: 80px;">)</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="annual_subscription" value="No" id="annual_no">
+                                <label for="annual_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">8a. Adults (30+ years) – Male</label>
+                        <input type="number" name="adults_male" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">8b. Adults (30+ years) – Female</label>
+                        <input type="number" name="adults_female" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">8c. Youth (18–30 years) – Male</label>
+                        <input type="number" name="youth_male" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">8d. Youth (18–30 years) – Female</label>
+                        <input type="number" name="youth_female" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">9a. Coordinator – Name</label>
+                        <input type="text" name="coordinator_name" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">9b. Coordinator – Education</label>
+                        <input type="text" name="coordinator_education" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">9c. Coordinator – Phone</label>
+                        <input type="text" name="coordinator_phone" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">10a. Loan Officer – Name</label>
+                        <input type="text" name="loan_officer_name" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">10b. Loan Officer – Education</label>
+                        <input type="text" name="loan_officer_education" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">10c. Loan Officer – Phone</label>
+                        <input type="text" name="loan_officer_phone" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">13. Heard about Government programs (PDM, NAADs)?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="gov_programs_heard" value="Yes" id="gov_yes">
+                                <label for="gov_yes">Yes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="gov_programs_heard" value="No" id="gov_no">
+                                <label for="gov_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">14. Have you benefited?</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="radio" name="gov_programs_benefited" value="Yes" id="benefited_yes">
+                                <label for="benefited_yes">Yes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="radio" name="gov_programs_benefited" value="No" id="benefited_no">
+                                <label for="benefited_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">15. Source of information</label>
+                        <input type="text" name="info_source" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">16. Main enterprises (list 6)</label>
+                        <div class="row">
+                            <div class="col-6"><input type="text" name="enterprise_1" class="form-control mb-2" placeholder="1."></div>
+                            <div class="col-6"><input type="text" name="enterprise_2" class="form-control mb-2" placeholder="2."></div>
+                            <div class="col-6"><input type="text" name="enterprise_3" class="form-control mb-2" placeholder="3."></div>
+                            <div class="col-6"><input type="text" name="enterprise_4" class="form-control mb-2" placeholder="4."></div>
+                            <div class="col-6"><input type="text" name="enterprise_5" class="form-control mb-2" placeholder="5."></div>
+                            <div class="col-6"><input type="text" name="enterprise_6" class="form-control mb-2" placeholder="6."></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION C: ENVIRONMENT -->
+        
+        <!-- XII. WATER SOURCES & CULTURAL HERITAGES -->
+        <div class="form-section" id="section-water-sources">
+            <div class="section-header">SECTION C: ENVIRONMENT</div>
+            <div class="subsection-header">XII. WATER SOURCES & CULTURAL HERITAGES</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table" id="water-sources-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name of Stream</th>
+                            <th>Heritage Type</th>
+                            <th>Village</th>
+                            <th>Parish</th>
+                            <th>Historical Usage</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="water-sources-tbody">
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="stream_name_1"></td>
+                            <td><input type="text" name="heritage_type_1"></td>
+                            <td><input type="text" name="stream_village_1"></td>
+                            <td><input type="text" name="stream_parish_1"></td>
+                            <td><input type="text" name="historical_usage_1"></td>
+                            <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" class="add-row-btn" onclick="addWaterSourceRow()">➕ Add more rows</button>
+        </div>
+
+        <!-- XIII. ENVIRONMENTAL PROJECTS -->
+        <div class="form-section" id="section-environmental-projects">
+            <div class="subsection-header">XIII. ENVIRONMENTAL PROJECTS (Select all that apply)</div>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" name="env_project_1" id="env_project1">
+                    <label for="env_project1">Agro Forestry</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="env_project_2" id="env_project2">
+                    <label for="env_project2">Agro Ecology</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="env_project_3" id="env_project3">
+                    <label for="env_project3">Apiculture (Bee keeping)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" name="env_project_4" id="env_project4">
+                    <label for="env_project4">Other:</label>
+                    <input type="text" name="env_project_other">
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION D: PHOTO CAPTURE -->
+        
+        <div class="form-section" id="section-photo-capture">
+            <div class="section-header">SECTION D: PHOTO CAPTURE</div>
+            <div class="subsection-header">PHOTO DOCUMENTATION</div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Leader Photo</label>
+                        <div class="photo-upload-area" onclick="document.getElementById('leader_photo').click()">
+                            <i class="bi bi-camera" style="font-size: 2rem; color: #6c757d;"></i>
+                            <p class="mt-2">Click to upload or take photo</p>
+                            <small class="text-muted">Supports: JPG, PNG, GIF (Max 5MB)</small>
+                        </div>
+                        <input type="file" id="leader_photo" name="leader_photo" accept="image/*" style="display: none;" onchange="previewPhoto(this, 'leader_preview')">
+                        <div id="leader_preview" class="mt-2"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Additional Photos (optional)</label>
+                        <div class="photo-upload-area" onclick="document.getElementById('additional_photos').click()">
+                            <i class="bi bi-images" style="font-size: 2rem; color: #6c757d;"></i>
+                            <p class="mt-2">Click to upload multiple photos</p>
+                            <small class="text-muted">You can select multiple files</small>
+                        </div>
+                        <input type="file" id="additional_photos" name="additional_photos" accept="image/*" multiple style="display: none;" onchange="previewMultiplePhotos(this, 'additional_preview')">
+                        <div id="additional_preview" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION E: SIGNATURES -->
+        
+        <div class="form-section" id="section-signatures">
+            <div class="section-header">SECTION E: SIGNATURES</div>
+            <div class="subsection-header">OFFICIAL SIGNATURES</div>
+            
+            <div class="table-responsive">
+                <table class="dynamic-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Name</th>
+                            <th>Title</th>
+                            <th>Signature</th>
+                            <th>Date</th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data Collector</strong></td>
+                            <td><input type="text" name="sig_data_collector_name" class="form-control"></td>
+                            <td><input type="text" name="sig_data_collector_title" class="form-control"></td>
+                            <td>
+                                <div class="signature-area" id="sig_data_collector"></div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="clearSignature('sig_data_collector')">Clear</button>
+                            </td>
+                            <td><input type="date" name="sig_data_collector_date" class="form-control"></td>
+                            <td><input type="text" name="sig_data_collector_contact" class="form-control"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sub-Clan Leader</strong></td>
+                            <td><input type="text" name="sig_clan_leader_name" class="form-control" value="{{ sub_clan.leader_name }}"></td>
+                            <td><input type="text" name="sig_clan_leader_title" class="form-control" placeholder="Sub-Clan Leader"></td>
+                            <td>
+                                <div class="signature-area" id="sig_clan_leader"></div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="clearSignature('sig_clan_leader')">Clear</button>
+                            </td>
+                            <td><input type="date" name="sig_clan_leader_date" class="form-control"></td>
+                            <td><input type="text" name="sig_clan_leader_contact" class="form-control" value="{{ sub_clan.leader_contact }}"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Program Coordinator</strong></td>
+                            <td><input type="text" name="sig_program_coordinator_name" class="form-control"></td>
+                            <td>—</td>
+                            <td>
+                                <div class="signature-area" id="sig_program_coordinator"></div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="clearSignature('sig_program_coordinator')">Clear</button>
+                            </td>
+                            <td><input type="date" name="sig_program_coordinator_date" class="form-control"></td>
+                            <td><input type="text" name="sig_program_coordinator_contact" class="form-control"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clan Head</strong></td>
+                            <td><input type="text" name="sig_chairperson_name" class="form-control"></td>
+                            <td>—</td>
+                            <td>
+                                <div class="signature-area" id="sig_chairperson"></div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="clearSignature('sig_chairperson')">Clear</button>
+                            </td>
+                            <td><input type="date" name="sig_chairperson_date" class="form-control"></td>
+                            <td><input type="text" name="sig_chairperson_contact" class="form-control"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <div>
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
+                <button type="button" class="btn btn-warning" onclick="resetForm()">🔄 Reset Form</button>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary btn-lg">📤 Submit Sub-Clan Survey</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dynamic table row management
+let executiveRowCount = 1;
+let structureRowCount = 1;
+let resourceRowCount = 4;
+let educationRowCount = 9;
+let educatedPersonRowCount = 1;
+let personAbroadRowCount = 1;
+let waterSourceRowCount = 1;
+
+function addExecutiveRow() {
+    executiveRowCount++;
+    const tbody = document.getElementById('executive-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${executiveRowCount}</td>
+        <td><input type="text" name="exec_name_${executiveRowCount}"></td>
+        <td>
+            <select name="exec_sex_${executiveRowCount}">
+                <option value="">Select</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+            </select>
+        </td>
+        <td><input type="text" name="exec_position_${executiveRowCount}"></td>
+        <td><input type="text" name="exec_education_${executiveRowCount}"></td>
+        <td><input type="text" name="exec_phone_${executiveRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addStructureRow() {
+    structureRowCount++;
+    const tbody = document.getElementById('structures-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${structureRowCount}</td>
+        <td><input type="text" name="struct_address_${structureRowCount}"></td>
+        <td>
+            <select name="struct_type_${structureRowCount}">
+                <option value="">Select</option>
+                <option value="Permanent">Permanent</option>
+                <option value="Semi-permanent">Semi-permanent</option>
+                <option value="Temporary">Temporary</option>
+            </select>
+        </td>
+        <td><input type="number" name="struct_staff_${structureRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addResourceRow() {
+    resourceRowCount++;
+    const tbody = document.getElementById('resources-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${resourceRowCount}</td>
+        <td><input type="text" name="resource_item_${resourceRowCount}"></td>
+        <td><input type="text" name="resource_size_${resourceRowCount}"></td>
+        <td><input type="text" name="resource_value_${resourceRowCount}"></td>
+        <td><input type="checkbox" name="resource_owned_${resourceRowCount}"></td>
+        <td><input type="checkbox" name="resource_rented_${resourceRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addEducationRow() {
+    educationRowCount++;
+    const tbody = document.getElementById('education-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${educationRowCount}</td>
+        <td><input type="text" name="edu_level_${educationRowCount}" placeholder="Education level"></td>
+        <td><input type="number" name="edu_pop_${educationRowCount}" min="0" max="100"></td>
+        <td><input type="text" name="edu_employment_${educationRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addEducatedPersonRow() {
+    educatedPersonRowCount++;
+    const tbody = document.getElementById('educated-persons-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${educatedPersonRowCount}</td>
+        <td><input type="text" name="educated_name_${educatedPersonRowCount}"></td>
+        <td>
+            <select name="educated_sex_${educatedPersonRowCount}">
+                <option value="">Select</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+            </select>
+        </td>
+        <td><input type="number" name="educated_age_${educatedPersonRowCount}"></td>
+        <td>
+            <select name="educated_level_${educatedPersonRowCount}">
+                <option value="">Select</option>
+                <option value="Degree">Degree</option>
+                <option value="Masters">Masters</option>
+                <option value="PhD">PhD</option>
+            </select>
+        </td>
+        <td><input type="text" name="educated_specialization_${educatedPersonRowCount}"></td>
+        <td><input type="text" name="educated_contact_${educatedPersonRowCount}"></td>
+        <td><input type="text" name="educated_location_${educatedPersonRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addPersonAbroadRow() {
+    personAbroadRowCount++;
+    const tbody = document.getElementById('persons-abroad-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${personAbroadRowCount}</td>
+        <td><input type="text" name="abroad_name_${personAbroadRowCount}"></td>
+        <td>
+            <select name="abroad_sex_${personAbroadRowCount}">
+                <option value="">Select</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+            </select>
+        </td>
+        <td><input type="number" name="abroad_age_${personAbroadRowCount}"></td>
+        <td><input type="text" name="abroad_contact_${personAbroadRowCount}"></td>
+        <td><input type="text" name="abroad_country_${personAbroadRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function addWaterSourceRow() {
+    waterSourceRowCount++;
+    const tbody = document.getElementById('water-sources-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${waterSourceRowCount}</td>
+        <td><input type="text" name="stream_name_${waterSourceRowCount}"></td>
+        <td><input type="text" name="heritage_type_${waterSourceRowCount}"></td>
+        <td><input type="text" name="stream_village_${waterSourceRowCount}"></td>
+        <td><input type="text" name="stream_parish_${waterSourceRowCount}"></td>
+        <td><input type="text" name="historical_usage_${waterSourceRowCount}"></td>
+        <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function removeRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+    updateRowNumbers();
+}
+
+function updateRowNumbers() {
+    // Update row numbers for all tables
+    const tables = ['executive-tbody', 'structures-tbody', 'resources-tbody'];
+    tables.forEach(tableId => {
+        const tbody = document.getElementById(tableId);
+        const rows = tbody.getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].cells[0].textContent = i + 1;
+        }
+    });
+}
+
+// Form actions
+function saveDraft() {
+    // Save form data to localStorage
+    const formData = new FormData(document.getElementById('sub-clan-obb-survey-form'));
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    localStorage.setItem('subClanObbSurveyDraft', JSON.stringify(data));
+    alert('Draft saved successfully!');
+}
+
+function resetForm() {
+    if (confirm('Are you sure you want to reset the entire form? All data will be lost.')) {
+        document.getElementById('sub-clan-obb-survey-form').reset();
+        localStorage.removeItem('subClanObbSurveyDraft');
+    }
+}
+
+// Progress indicator update
+function updateProgress() {
+    const sections = document.querySelectorAll('.form-section');
+    const progressSteps = document.querySelectorAll('.progress-step');
+    
+    sections.forEach((section, index) => {
+        const inputs = section.querySelectorAll('input, select, textarea');
+        let hasData = false;
+        
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                if (input.checked) hasData = true;
+            } else if (input.value.trim() !== '') {
+                hasData = true;
+            }
+        });
+        
+        if (hasData) {
+            progressSteps[index].classList.remove('pending');
+            progressSteps[index].classList.add('completed');
+        }
+    });
+}
+
+// Auto-save draft every 30 seconds
+setInterval(saveDraft, 30000);
+
+// Load draft on page load
+window.addEventListener('load', function() {
+    const draft = localStorage.getItem('subClanObbSurveyDraft');
+    if (draft) {
+        const data = JSON.parse(draft);
+        const form = document.getElementById('sub-clan-obb-survey-form');
+        
+        Object.keys(data).forEach(key => {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = data[key] === 'on';
+                } else {
+                    input.value = data[key];
+                }
+            }
+        });
+    }
+});
+
+// Photo preview functions
+function previewPhoto(input, previewId) {
+    const preview = document.getElementById(previewId);
+    preview.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Check file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `
+                <div class="position-relative d-inline-block">
+                    <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removePhoto('${previewId}', '${input.id}')">×</button>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function previewMultiplePhotos(input, previewId) {
+    const preview = document.getElementById(previewId);
+    preview.innerHTML = '';
+    
+    if (input.files) {
+        Array.from(input.files).forEach((file, index) => {
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`File ${file.name} is too large. Maximum size is 5MB.`);
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'position-relative d-inline-block me-2 mb-2';
+                photoDiv.innerHTML = `
+                    <img src="${e.target.result}" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeMultiplePhoto(${index})">×</button>
+                `;
+                preview.appendChild(photoDiv);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function removePhoto(previewId, inputId) {
+    document.getElementById(previewId).innerHTML = '';
+    document.getElementById(inputId).value = '';
+}
+
+function removeMultiplePhoto(index) {
+    const input = document.getElementById('additional_photos');
+    const dt = new DataTransfer();
+    
+    if (input.files) {
+        Array.from(input.files).forEach((file, i) => {
+            if (i !== index) {
+                dt.items.add(file);
+            }
+        });
+    }
+    
+    input.files = dt.files;
+    previewMultiplePhotos(input, 'additional_preview');
+}
+
+// Signature functionality
+let signaturePads = {};
+
+function initSignaturePad(padId) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 100;
+    canvas.style.border = '1px solid #ccc';
+    canvas.style.cursor = 'crosshair';
+    
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    
+    function startDrawing(e) {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    }
+    
+    function draw(e) {
+        if (!isDrawing) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        lastX = x;
+        lastY = y;
+    }
+    
+    function stopDrawing() {
+        isDrawing = false;
+    }
+    
+    // Touch events for mobile
+    function getTouchPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    }
+    
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+    });
+    
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+    });
+    
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const mouseEvent = new MouseEvent('mouseup', {});
+        canvas.dispatchEvent(mouseEvent);
+    });
+    
+    signaturePads[padId] = { canvas, ctx };
+    
+    // Replace the signature area with the canvas
+    const signatureArea = document.getElementById(padId);
+    signatureArea.innerHTML = '';
+    signatureArea.appendChild(canvas);
+    
+    // Add hidden input to store signature data
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = padId + '_data';
+    signatureArea.appendChild(hiddenInput);
+    
+    signaturePads[padId].hiddenInput = hiddenInput;
+}
+
+function clearSignature(padId) {
+    if (signaturePads[padId]) {
+        const { canvas, ctx, hiddenInput } = signaturePads[padId];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hiddenInput.value = '';
+    }
+}
+
+function saveSignatures() {
+    Object.keys(signaturePads).forEach(padId => {
+        const { canvas, hiddenInput } = signaturePads[padId];
+        if (hiddenInput) {
+            hiddenInput.value = canvas.toDataURL();
+        }
+    });
+}
+
+// Initialize signature pads when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const signatureIds = ['sig_data_collector', 'sig_clan_leader', 'sig_program_coordinator', 'sig_chairperson'];
+    signatureIds.forEach(id => {
+        initSignaturePad(id);
+    });
+    
+    // Save signatures before form submission
+    const form = document.getElementById('sub-clan-obb-survey-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            saveSignatures();
+        });
+    }
+});
+
+// Update progress on input changes
+document.addEventListener('input', updateProgress);
+document.addEventListener('change', updateProgress);
+</script>
+{% endblock %}

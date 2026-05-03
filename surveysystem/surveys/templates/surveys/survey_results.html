@@ -1,0 +1,773 @@
+{% extends "surveys/base.html" %}
+{% load survey_filters %}
+
+{% block title %}Results: {{ survey.title }} - Survey System{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+.results-dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.stat-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+.results-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.chart-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+.response-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.response-table th {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+.response-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+.response-table tr:hover {
+    background: #f8f9fa;
+}
+.question-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+.question-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    flex: 1;
+}
+.question-type-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.choice-bar-container {
+    background: #e9ecef;
+    border-radius: 10px;
+    height: 30px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+.choice-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+.export-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+.btn-export {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin: 0 0.5rem;
+}
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+}
+.no-responses {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+.no-responses i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-dashboard">
+    <div class="text-center">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-line me-3"></i>{{ survey.title }} - Survey Results
+        </h1>
+        <p class="lead mb-0">Comprehensive analysis of collected survey data</p>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ responses.count }}</div>
+            <div class="stat-label">
+                <i class="fas fa-users me-2"></i>Total Responses
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ questions.count }}</div>
+            <div class="stat-label">
+                <i class="fas fa-question-circle me-2"></i>Questions
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ survey.created_at|date:"M d" }}</div>
+            <div class="stat-label">
+                <i class="fas fa-calendar-alt me-2"></i>Start Date
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{% now "M d" %}</div>
+            <div class="stat-label">
+                <i class="fas fa-calendar-check me-2"></i>Current Date
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if responses %}
+    <!-- Individual Responses Table -->
+    <div class="results-table">
+        <div class="p-4">
+            <h3 class="mb-4">
+                <i class="fas fa-table me-2"></i>Individual Response Data
+            </h3>
+            <div class="table-responsive">
+                <table class="response-table">
+                    <thead>
+                        <tr>
+                            <th>Response ID</th>
+                            <th>Submitted By</th>
+                            <th>Submission Date</th>
+                            <th>IP Address</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for response in responses %}
+                        <tr>
+                            <td>#{{ response.id }}</td>
+                            <td>
+                                {% if response.user %}
+                                    {{ response.user.get_full_name|default:response.user.username }}
+                                {% else %}
+                                    <span class="text-muted">Anonymous</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ response.submitted_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ response.ip_address|default:"-" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewResponseDetails('{{ response.id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No responses found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Analysis -->
+    <div class="mt-4">
+        <h2 class="text-center mb-4">
+            <i class="fas fa-chart-bar me-2"></i>Question-by-Question Analysis
+        </h2>
+        {% for question in questions %}
+            <div class="question-card">
+                <div class="question-header">
+                    <div class="question-title">
+                        <span class="badge bg-primary me-2">Q{{ forloop.counter }}</span>
+                        {{ question.text }}
+                    </div>
+                    <span class="question-type-badge">{{ question.get_question_type_display }}</span>
+                    {% if question.required %}
+                        <span class="badge bg-danger ms-2">Required</span>
+                    {% endif %}
+                </div>
+                
+                <div class="question-stats">
+                    {% for q_id, stats in question_stats.items %}
+                        {% if q_id == question.id %}
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>{{ stats.total_responses }}</strong> responses for this question
+                                {% if question.required %}
+                                    <span class="badge bg-danger ms-2">Required</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if question.question_type in 'radio,select' %}
+                                <div class="chart-container">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-chart-pie me-2"></i>Response Distribution
+                                    </h5>
+                                    {% for choice, count in stats.data.choices.items %}
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold">{{ choice }}</span>
+                                            <span class="badge bg-primary">{{ count }}</span>
+                                        </div>
+                                        <div class="choice-bar-container">
+                                            {% widthratio count stats.total_responses 100 as percentage %}
+                                            <div class="choice-bar" data-width="{{ percentage }}"></div>
+                                        </div>
+                                        <small class="text-muted">{{ percentage }}% of responses</small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if stats.data.most_common %}
+                                    <div class="alert alert-success mt-3">
+                                        <i class="fas fa-trophy me-2"></i>
+                                        <strong>Most Common Response:</strong> {{ stats.data.most_common.0 }} ({{ stats.data.most_common.1 }} responses)
+                                    </div>
+                                {% endif %}
+                        
+                        {% elif question.question_type == 'checkbox' %}
+                                <div class="chart-container">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-check-square me-2"></i>Selection Frequency
+                                    </h5>
+                                    {% for choice, count in stats.data.choices.items %}
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold">{{ choice }}</span>
+                                            <span class="badge bg-success">{{ count }}</span>
+                                        </div>
+                                        <div class="choice-bar-container">
+                                            {% widthratio count stats.total_responses 100 as percentage %}
+                                            <div class="choice-bar" data-width="{{ percentage }}"></div>
+                                        </div>
+                                        <small class="text-muted">{{ percentage }}% selected</small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                        
+                        {% else %}
+                            <div class="chart-container">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-comment me-2"></i>Text Responses
+                                </h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Response</th>
+                                                <th>Length</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for response in stats.data.responses %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ response|truncatewords:15 }}</td>
+                                                <td>{{ response|length }} chars</td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">No text responses</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% if stats.data.average_length %}
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-calculator me-2"></i>
+                                        <strong>Average Response Length:</strong> {{ stats.data.average_length|floatformat:1 }} characters
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Export Section -->
+    <div class="export-section">
+        <h3 class="mb-4">
+            <i class="fas fa-download me-2"></i>Export Survey Data
+        </h3>
+        <p class="text-muted mb-4">Download comprehensive survey results for further analysis and reporting</p>
+        <div class="d-flex justify-content-center flex-wrap">
+            <button class="btn-export" onclick="exportResults('csv')">
+                <i class="fas fa-file-csv me-2"></i>Export as CSV
+            </button>
+            <button class="btn-export" onclick="exportResults('json')">
+                <i class="fas fa-file-code me-2"></i>Export as JSON
+            </button>
+            <button class="btn-export" onclick="exportResults('excel')">
+                <i class="fas fa-file-excel me-2"></i>Export as Excel
+            </button>
+            <button class="btn-export" onclick="printResults()">
+                <i class="fas fa-print me-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+{% else %}
+    <div class="no-responses">
+        <i class="fas fa-inbox"></i>
+        <h2 class="mb-3">No Responses Yet</h2>
+        <p class="lead mb-4">This survey hasn't received any responses yet.</p>
+        <p class="text-muted mb-4">Share the survey link to start collecting responses!</p>
+        <div class="share-section">
+            <h4 class="mb-3">
+                <i class="fas fa-share-alt me-2"></i>Share Survey
+            </h4>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" value="{{ request.build_absolute_uri }}" readonly id="survey-link">
+                <button class="btn btn-primary" onclick="copyLink()">
+                    <i class="fas fa-copy me-2"></i>Copy Link
+                </button>
+            </div>
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-outline-primary" onclick="shareViaEmail()">
+                    <i class="fas fa-envelope me-2"></i>Email
+                </button>
+                <button class="btn btn-outline-success" onclick="shareViaWhatsApp()">
+                    <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                </button>
+                <button class="btn btn-outline-info" onclick="shareViaFacebook()">
+                    <i class="fab fa-facebook me-2"></i>Facebook
+                </button>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<script>
+function exportResults(format) {
+    var surveyId = parseInt('{{ survey.id }}');
+    var exportUrl = '';
+    
+    switch(format) {
+        case 'csv':
+            exportUrl = '/surveys/' + surveyId + '/export/csv/';
+            break;
+        case 'json':
+            exportUrl = '/surveys/' + surveyId + '/export/json/';
+            break;
+        case 'excel':
+            exportUrl = '/surveys/' + surveyId + '/export/excel/';
+            break;
+        default:
+            exportUrl = '/surveys/' + surveyId + '/export/csv/';
+    }
+    
+    window.open(exportUrl, '_blank');
+}
+
+function copyLink() {
+    var linkInput = document.getElementById('survey-link');
+    linkInput.select();
+    document.execCommand('copy');
+    
+    // Show success feedback
+    var button = event.target;
+    var originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-primary');
+    
+    setTimeout(function() {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-primary');
+    }, 2000);
+}
+
+function shareViaEmail() {
+    var subject = encodeURIComponent('Survey: {{ survey.title }}');
+    var body = encodeURIComponent('I\'d like to share this survey with you: {{ request.build_absolute_uri }}');
+    window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+}
+
+function shareViaWhatsApp() {
+    var text = encodeURIComponent('Survey: {{ survey.title }} - {{ request.build_absolute_uri }}');
+    window.open('https://wa.me/?text=' + text, '_blank');
+}
+
+function shareViaFacebook() {
+    var url = encodeURIComponent('{{ request.build_absolute_uri }}');
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank');
+}
+
+function viewResponseDetails(responseId) {
+    // Create modal to show detailed response
+    var modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = '<div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Response Details #' + responseId + '</h5><button type="button" class="btn-close" data-bs-dismiss="modal" onclick="this.closest(\'.modal\').remove()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-3">Loading response details...</p></div></div></div></div>';
+    
+    document.body.appendChild(modal);
+    
+    // Load response details via AJAX
+    fetch('/surveys/api/response/' + responseId + '/')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            var modalBody = modal.querySelector('.modal-body');
+            modalBody.innerHTML = formatResponseDetails(data);
+        })
+        .catch(function(error) {
+            console.error('Error loading response details:', error);
+            var modalBody = modal.querySelector('.modal-body');
+            modalBody.innerHTML = '<div class="alert alert-danger">Error loading response details</div>';
+        });
+    
+    // Show modal
+    setTimeout(function() {
+        modal.classList.add('show');
+        modal.style.display = 'block';
+    }, 100);
+}
+
+function formatResponseDetails(data) {
+    var html = '<div class="response-details">';
+    
+    if (data.answers) {
+        data.answers.forEach(function(answer, index) {
+            html += '<div class="mb-4"><h6 class="text-primary">Q' + (index + 1) + '. ' + answer.question_text + '</h6><div class="answer-content p-3 bg-light rounded">' + formatAnswer(answer) + '</div></div>';
+        });
+    }
+    
+    html += '<div class="response-meta mt-4"><p class="text-muted"><i class="fas fa-user me-2"></i><strong>Submitted by:</strong> ' + (data.submitted_by || 'Anonymous') + '</p><p class="text-muted"><i class="fas fa-calendar me-2"></i><strong>Date:</strong> ' + new Date(data.submitted_at).toLocaleString() + '</p><p class="text-muted"><i class="fas fa-globe me-2"></i><strong>IP:</strong> ' + (data.ip_address || 'N/A') + '</p></div>';
+    
+    html += '</div>';
+    return html;
+}
+
+function formatAnswer(answer) {
+    switch (answer.question_type) {
+        case 'radio':
+        case 'select':
+            return '<strong>Selected:</strong> ' + answer.answer_text;
+        case 'checkbox':
+            return '<strong>Selected:</strong> ' + (Array.isArray(answer.answer_text) ? answer.answer_text.join(', ') : answer.answer_text);
+        case 'text':
+        case 'textarea':
+            return '<div class="text-answer">' + answer.answer_text + '</div>';
+        default:
+            return answer.answer_text;
+    }
+}
+
+function printResults() {
+    window.print();
+}
+
+// Set choice bar widths from data attributes
+document.addEventListener('DOMContentLoaded', function() {
+    var choiceBars = document.querySelectorAll('.choice-bar');
+    choiceBars.forEach(function(bar) {
+        var width = bar.getAttribute('data-width');
+        if (width) {
+            bar.style.width = width + '%';
+        }
+    });
+});
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'e':
+                e.preventDefault();
+                exportResults('csv');
+                break;
+            case 'p':
+                e.preventDefault();
+                printResults();
+                break;
+        }
+    }
+});
+</script>
+
+<style>
+.results-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+.summary-item {
+    color: #4a5568;
+}
+
+.results-content {
+    margin-top: 2rem;
+}
+
+.question-result {
+    margin-bottom: 2rem;
+    border-left: 4px solid #667eea;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.question-header h3 {
+    margin: 0;
+    color: #2d3748;
+    flex: 1;
+}
+
+.question-type {
+    background: #e2e8f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.stats-overview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.response-count {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.choice-results {
+    margin-top: 1rem;
+}
+
+.choice-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.choice-label {
+    font-weight: 500;
+}
+
+.choice-bar-container {
+    width: 200px;
+    height: 24px;
+    background: #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.choice-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+.choice-count {
+    text-align: right;
+    font-size: 0.875rem;
+    color: #718096;
+    min-width: 80px;
+}
+
+.most-common {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #edf2f7;
+    border-radius: 4px;
+    color: #4a5568;
+}
+
+.text-results {
+    margin-top: 1rem;
+}
+
+.text-responses {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1rem;
+    background: #f8f9fa;
+}
+
+.text-response {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    color: #4a5568;
+}
+
+.text-response:last-child {
+    border-bottom: none;
+}
+
+.text-stats {
+    margin-top: 1rem;
+    color: #718096;
+}
+
+.export-section {
+    margin-top: 2rem;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.share-section {
+    margin-top: 1.5rem;
+}
+
+.share-link {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.share-link input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+@media (max-width: 768px) {
+    .choice-item {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .choice-bar-container {
+        width: 100%;
+    }
+    
+    .question-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .export-buttons {
+        flex-direction: column;
+    }
+    
+    .share-link {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function copyLink() {
+    const linkInput = document.getElementById('survey-link');
+    linkInput.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.target;
+    const originalText = button.textContent;
+    button.textContent = 'Copied!';
+    button.style.background = '#48bb78';
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '';
+    }, 2000);
+}
+
+function exportResults(format) {
+    var surveyId = parseInt('{{ survey.id }}');
+    var url = '/api/surveys/' + surveyId + '/export/?format=' + format;
+    
+    // For now, just show an alert
+    // In a real implementation, this would trigger a download
+    alert('Export functionality would download results as ' + format.toUpperCase() + '\nURL: ' + url);
+}
+</script>
+{% endblock %}
